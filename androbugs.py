@@ -3487,8 +3487,8 @@ def __persist_db(writer, args) :
 	if os.environ.has_key('VCAP_SERVICES'):
 		vcapJson = json.loads(os.environ['VCAP_SERVICES'])
 		for key, value in vcapJson.iteritems():
-			# Only find the services with the name mongodb-service, there should only be one
-			mongoServices = filter(lambda s: s['name'] == 'mongodb-service', value)
+			# Only find the services with the name CHANGE_ME, there should only be one
+			mongoServices = filter(lambda s: s['name'] == 'vulnDB', value)
 			if len(mongoServices) != 0:
 				mongoService = mongoServices[0]
 				if "uri" in mongoService['credentials']:
