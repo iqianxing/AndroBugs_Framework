@@ -198,14 +198,20 @@ class Writer :
 				src_class_name, src_method_name, src_descriptor =  path.get_src( cm )
 				dst_class_name, dst_method_name, dst_descriptor =  path.get_dst( cm )
 
-				self.write("=> %s->%s%s (0x%x) ---> %s->%s%s" % (src_class_name,
-																src_method_name,
-																src_descriptor,
-																path.get_idx(),
-																dst_class_name,
-																dst_method_name,
-																dst_descriptor),
-					indention_space_count)
+				# TODO: remove html, this is used only for a test
+				self.write('<li>{0} -> {1}{2} ---> {3} -> {4}{5}</li>'.format(
+					src_class_name, src_method_name, src_descriptor,
+					dst_class_name, dst_method_name, dst_descriptor
+				))
+
+				# self.write("=> %s->%s%s (0x%x) ---> %s->%s%s" % (src_class_name,
+				# 												src_method_name,
+				# 												src_descriptor,
+				# 												path.get_idx(),
+				# 												dst_class_name,
+				# 												dst_method_name,
+				# 												dst_descriptor),
+				# 	indention_space_count)
 
 			else :
 				src_class_name, src_method_name, src_descriptor =  path.get_src( cm )
@@ -228,8 +234,10 @@ class Writer :
 
 			Different from "analysis.show_Paths", this "show_Paths" writes to the tmp writer
 		"""
-		for path in paths :
-			self.show_Path( vm, path, indention_space_count )
+		self.write('<ul>')
+		for path in paths:
+			self.show_Path(vm, path, indention_space_count)
+		self.write('</ul>')
 
 	def show_single_PathVariable(self, vm, path, indention_space_count=0):
 		"""
@@ -1247,7 +1255,7 @@ def __analyze(writer, args) :
 				pass
 
 	else:
-		writer.startWriter("SSL_URLS_NOT_IN_HTTPS", LEVEL_INFO, "SSL Connection Checking", "Did not discover urls that are not under SSL (Notice: if you encrypt the url string, we can not discover that).", ["SSL_Security"])
+		writer.startWriter("SSL_URLS_NOT_IN_HTTPS", LEVEL_INFO, "SSL Connection Checking", "Did not discover any URLs that are not under SSL (Notice: if the URL string is encrypted, we can not discover that).", ["SSL_Security"])
 
 	#--------------------------------------------------------------------
 
@@ -1272,11 +1280,11 @@ def __analyze(writer, args) :
 						list_security_related_methods.append(method)
 
 		if list_security_related_methods :
-			writer.startWriter("Security_Methods", LEVEL_NOTICE, "Security Methods Checking", "Find some security-related method names:")
+			writer.startWriter("Security_Methods", LEVEL_NOTICE, "Security Methods Checking", "Found some security related method names:")
 			for method in list_security_related_methods :
 				writer.write(method.get_class_name() + "->" + method.get_name() + method.get_descriptor())
 		else :
-			writer.startWriter("Security_Methods", LEVEL_INFO, "Security Methods Checking", "Did not detect method names containing security related string.")
+			writer.startWriter("Security_Methods", LEVEL_INFO, "Security Methods Checking", "Did not detect any method names containing security related strings.")
 
 
 	#------------------------------------------------------------------------------------------------------
@@ -1292,12 +1300,12 @@ def __analyze(writer, args) :
 					list_security_related_classes.append(current_class)
 
 		if list_security_related_classes :
-			writer.startWriter("Security_Classes", LEVEL_NOTICE, "Security Classes Checking", "Find some security-related class names:")
+			writer.startWriter("Security_Classes", LEVEL_NOTICE, "Security Classes Checking", "Found some security related class names:")
 
 			for current_class in list_security_related_classes :
 				writer.write(current_class.get_name())
 		else :
-			writer.startWriter("Security_Classes", LEVEL_INFO, "Security Classes Checking", "Did not detect class names containing security related string.")
+			writer.startWriter("Security_Classes", LEVEL_INFO, "Security Classes Checking", "Did not detect any class names containing security related strings.")
 
 	#------------------------------------------------------------------------------------------------------
 
@@ -1313,9 +1321,9 @@ def __analyze(writer, args) :
 		isMasterKeyVulnerability = True
 
 	if isMasterKeyVulnerability :
-		writer.startWriter("MASTER_KEY", LEVEL_CRITICAL, "Master Key Type I Vulnerability", "This APK is suffered from Master Key Type I Vulnerability.", None, "CVE-2013-4787")
+		writer.startWriter("MASTER_KEY", LEVEL_CRITICAL, "Master Key Type I Vulnerability", "This APK contains Master Key Type I Vulnerability.", None, "CVE-2013-4787")
 	else :
-		writer.startWriter("MASTER_KEY", LEVEL_INFO, "Master Key Type I Vulnerability", "No Master Key Type I Vulnerability in this APK.", None, "CVE-2013-4787")
+		writer.startWriter("MASTER_KEY", LEVEL_INFO, "Master Key Type I Vulnerability", "No Master Key Type I Vulnerability found in this APK.", None, "CVE-2013-4787")
 
 	#------------------------------------------------------------------------------------------------------
 	# Certificate checking (Prerequisite: 1.directory name "tmp" available  2.keytool command is available)
@@ -1352,10 +1360,10 @@ def __analyze(writer, args) :
 	is_debug_open = a.is_debuggable()   #Check 'android:debuggable'
 	if is_debug_open:
 		writer.startWriter("DEBUGGABLE", LEVEL_CRITICAL, "Android Debug Mode Checking",
-			"DEBUG mode is ON(android:debuggable=\"true\") in AndroidManifest.xml. This is very dangerous. The attackers will be able to sniffer the debug messages by Logcat. Please disable the DEBUG mode if it is a released application.", ["Debug"])
+			"DEBUG mode is ON (android:debuggable=\"true\") in AndroidManifest.xml. This is very dangerous. The attackers will be able to sniff the debug messages using Logcat. Please disable the DEBUG mode if it is a released application.", ["Debug"])
 
 	else:
-		writer.startWriter("DEBUGGABLE", LEVEL_INFO, "Android Debug Mode Checking", "DEBUG mode is OFF(android:debuggable=\"false\") in AndroidManifest.xml.", ["Debug"])
+		writer.startWriter("DEBUGGABLE", LEVEL_INFO, "Android Debug Mode Checking", "DEBUG mode is OFF (android:debuggable=\"false\") in AndroidManifest.xml.", ["Debug"])
 
 	#------------------------------------------------------------------------------------------------------
 
@@ -1416,7 +1424,7 @@ def __analyze(writer, args) :
 		for path in list_detected_FLAG_DEBUGGABLE_path:
 			writer.show_single_PathVariable(d, path)
 	else:
-		writer.startWriter("HACKER_DEBUGGABLE_CHECK", LEVEL_INFO, "Codes for Checking Android Debug Mode", "Did not detect codes for checking \"ApplicationInfo.FLAG_DEBUGGABLE\" in AndroidManifest.xml.", ["Debug", "Hacker"])
+		writer.startWriter("HACKER_DEBUGGABLE_CHECK", LEVEL_INFO, "Codes for Checking Android Debug Mode", "Did not detect any codes for checking \"ApplicationInfo.FLAG_DEBUGGABLE\" in AndroidManifest.xml.", ["Debug", "Hacker"])
 
 	#----------------------------------------------------------------------------------
 
@@ -1424,7 +1432,7 @@ def __analyze(writer, args) :
 	if ACCESS_MOCK_LOCATION in all_permissions:
 		writer.startWriter("USE_PERMISSION_ACCESS_MOCK_LOCATION", LEVEL_CRITICAL, "Unnecessary Permission Checking", "Permission 'android.permission.ACCESS_MOCK_LOCATION' only works in emulator environment. Please remove this permission if it is a released application.")
 	else:
-		writer.startWriter("USE_PERMISSION_ACCESS_MOCK_LOCATION", LEVEL_INFO, "Unnecessary Permission Checking", "Permission 'android.permission.ACCESS_MOCK_LOCATION' sets correctly.")
+		writer.startWriter("USE_PERMISSION_ACCESS_MOCK_LOCATION", LEVEL_INFO, "Unnecessary Permission Checking", "Permission 'android.permission.ACCESS_MOCK_LOCATION' is set correctly.")
 
 	#----------------------------------------------------------------------------------
 
@@ -1432,12 +1440,12 @@ def __analyze(writer, args) :
 
 	if permissionNameOfWrongPermissionGroup:  #If the list is not empty
 		writer.startWriter("PERMISSION_GROUP_EMPTY_VALUE", LEVEL_CRITICAL, "AndroidManifest PermissionGroup Checking",
-			"Setting the 'permissionGroup' attribute an empty value will make the permission definition become invalid and no other apps will be able to use the permission.")
+			"Setting the 'permissionGroup' attribute to an empty value will make the permission definition invalid and no other applications will be able to use the permission.")
 
 		for name in permissionNameOfWrongPermissionGroup:
-			writer.write("Permission name '%s' sets an empty value in `permissionGroup` attribute." % (name))
+			writer.write("Permission name '%s' sets an empty value in 'permissionGroup' attribute." % (name))
 	else:
-		writer.startWriter("PERMISSION_GROUP_EMPTY_VALUE", LEVEL_INFO, "AndroidManifest PermissionGroup Checking", "PermissionGroup in permission tag of AndroidManifest sets correctly.")
+		writer.startWriter("PERMISSION_GROUP_EMPTY_VALUE", LEVEL_INFO, "AndroidManifest PermissionGroup Checking", "PermissionGroup in permission tag of AndroidManifest.xml is set correctly.")
 
 	#----------------------------------------------------------------------------------
 
@@ -1478,10 +1486,11 @@ def __analyze(writer, args) :
 
 	if isSuggestGCM :
 
-		output_string = """Your supporting minSdk is """ + str(int_min_sdk) + """
-You are now allowing minSdk to less than 8. Please check: http://developer.android.com/about/dashboards/index.html
-Google Cloud Messaging (Push Message) service only allows Android SDK >= 8 (Android 2.2). Pleae check: http://developer.android.com/google/gcm/gcm.html
-You may have the change to use GCM in the future, so please set minSdk to at least 9."""
+		output_string = "The supported minSdk is " + str(int_min_sdk) + \
+						". The minSdk is less than 8. Please check: http://developer.android.com/about/dashboards/index.html." \
+						" Google Cloud Messaging (Push Message) service only allows Android SDK >= 8 (Android 2.2). Please check: http://developer.android.com/google/gcm/gcm.html." \
+						" If the GCM feature will be needed in the future, please set minSdk to at least 9."
+
 		writer.startWriter("MANIFEST_GCM", LEVEL_NOTICE, "Google Cloud Messaging Suggestion", output_string)
 
 	else :
@@ -1519,11 +1528,11 @@ You may have the change to use GCM in the future, so please set minSdk to at lea
 
 		if "android.permission.INTERNET" in all_permissions:
 			writer.startWriter("USE_PERMISSION_INTERNET", LEVEL_INFO, "Accessing the Internet Checking",
-						"This app is using the Internet via HTTP protocol.")
+						"This app is using Internet via HTTP protocol.")
 
 		else:
 			writer.startWriter("USE_PERMISSION_INTERNET", LEVEL_CRITICAL, "Accessing the Internet Checking",
-						"This app has some internet accessing codes but does not have 'android.permission.INTERNET' use-permission in AndroidManifest.")
+						"This app has some Internet accessing code but does not have 'android.permission.INTERNET' use-permission in AndroidManifest.xml.")
 
 		# if pkg_URLConnection:
 		# 	print("        =>URLConnection:")
@@ -1547,7 +1556,7 @@ You may have the change to use GCM in the future, so please set minSdk to at lea
 		# 	print
 
 	else:
-		writer.startWriter("USE_PERMISSION_INTERNET", LEVEL_INFO, "Accessing the Internet Checking", "No HTTP-related connection codes found.")
+		writer.startWriter("USE_PERMISSION_INTERNET", LEVEL_INFO, "Accessing the Internet Checking", "No HTTP-related connection code found.")
 
 	# ------------------------------------------------------------------------
 
@@ -1568,7 +1577,7 @@ You may have the change to use GCM in the future, so please set minSdk to at lea
 
 		list_base64_decoded_urls = {}
 
-		writer.startWriter("HACKER_BASE64_STRING_DECODE", LEVEL_CRITICAL, "Base64 String Encryption", "Found Base64 encoding \"String(s)\" (Total: " + str(len(organized_list_base64_success_decoded_string_to_original_mapping)) + "). We cannot guarantee all of the Strings are Base64 encoding and also we will not show you the decoded binary file:", ["Hacker"])
+		writer.startWriter("HACKER_BASE64_STRING_DECODE", LEVEL_CRITICAL, "Base64 String Encryption", "Found Base64 encoding \"String(s)\" (Total: " + str(len(organized_list_base64_success_decoded_string_to_original_mapping)) + "). We cannot guarantee all of the Strings are Base64 encoding and also we will not show the decoded binary file:", ["Hacker"])
 
 		for decoded_string, original_string, dict_class_to_method_mapping in organized_list_base64_success_decoded_string_to_original_mapping :
 
@@ -1605,7 +1614,7 @@ You may have the change to use GCM in the future, so please set minSdk to at lea
 							writer.write("    ->From class: " + source_classes_and_functions)
 
 	else:
-		writer.startWriter("HACKER_BASE64_STRING_DECODE", LEVEL_INFO, "Base64 String Encryption", "No encoded Base64 String or Urls found.", ["Hacker"])
+		writer.startWriter("HACKER_BASE64_STRING_DECODE", LEVEL_INFO, "Base64 String Encryption", "No Base64 encoded Strings or Urls found.", ["Hacker"])
 
 	# ------------------------------------------------------------------------
 	#WebView addJavascriptInterface checking:
@@ -1616,13 +1625,12 @@ You may have the change to use GCM in the future, so please set minSdk to at lea
 
 	if path_WebView_addJavascriptInterface:
 
-		output_string = """Found a critical WebView "addJavascriptInterface" vulnerability. This method can be used to allow JavaScript to control the host application.
-This is a powerful feature, but also presents a security risk for applications targeted to API level JELLY_BEAN(4.2) or below, because JavaScript could use reflection to access an injected object's public fields. Use of this method in a WebView containing untrusted content could allow an attacker to manipulate the host application in unintended ways, executing Java code with the permissions of the host application.
-Reference:
-  1."http://developer.android.com/reference/android/webkit/WebView.html#addJavascriptInterface(java.lang.Object, java.lang.String) "
-  2.https://labs.mwrinfosecurity.com/blog/2013/09/24/webview-addjavascriptinterface-remote-code-execution/
-  3.http://50.56.33.56/blog/?p=314
-  4.http://blog.trustlook.com/2013/09/04/alert-android-webview-addjavascriptinterface-code-execution-vulnerability/
+		output_string = """Found a critical WebView "addJavascriptInterface" vulnerability. This method can be used to allow JavaScript to control the host application. This is a powerful feature, but also presents a security risk for applications targeted to API level JELLY_BEAN (4.2) or below, because JavaScript could use reflection to access an injected object's public fields. Use of this method in a WebView containing untrusted content could allow an attacker to manipulate the host application in unintended ways, executing Java code with the permissions of the host application.
+References:
+  1. http://developer.android.com/reference/android/webkit/WebView.html#addJavascriptInterface(java.lang.Object, java.lang.String)
+  2. https://labs.mwrinfosecurity.com/blog/2013/09/24/webview-addjavascriptinterface-remote-code-execution/
+  3. http://d3adend.org/blog/?p=314
+  4. http://blog.trustlook.com/2013/09/04/alert-android-webview-addjavascriptinterface-code-execution-vulnerability/
 Please modify the below code:"""
 
 		writer.startWriter("WEBVIEW_RCE", LEVEL_CRITICAL, "WebView RCE Vulnerability Checking", output_string, ["WebView", "Remote Code Execution"], "CVE-2013-4710")
@@ -1630,7 +1638,7 @@ Please modify the below code:"""
 
 	else:
 
-		writer.startWriter("WEBVIEW_RCE", LEVEL_INFO, "WebView RCE Vulnerability Checking", "WebView addJavascriptInterface vulnerabilities not found.", ["WebView", "Remote Code Execution"], "CVE-2013-4710")
+		writer.startWriter("WEBVIEW_RCE", LEVEL_INFO, "WebView RCE Vulnerability Checking", "Did not find any WebView addJavascriptInterface vulnerabilities.", ["WebView", "Remote Code Execution"], "CVE-2013-4710")
 
 	# ------------------------------------------------------------------------
 	#KeyStore null PWD checking:
@@ -1660,13 +1668,13 @@ Please modify the below code:"""
 	if (not list_no_pwd_keystore) and (not list_protected_keystore) and (not list_no_pwd_probably_ssl_pinning_keystore):
 
 		writer.startWriter("HACKER_KEYSTORE_NO_PWD", LEVEL_INFO, "KeyStore Protection Checking",
-			"Ignore checking KeyStore protected by password or not because you're not using KeyStore.", ["KeyStore", "Hacker"])
+			"Ignored checking KeyStore password protection because KeyStore is not used.", ["KeyStore", "Hacker"])
 
 	else:
 		if list_no_pwd_probably_ssl_pinning_keystore:
 
 			writer.startWriter("HACKER_KEYSTORE_SSL_PINNING", LEVEL_CRITICAL, "KeyStore Protection Checking",
-				"The Keystores below seem using \"byte array\" or \"hard-coded cert info\" to do SSL pinning (Total: " + str(len(list_no_pwd_probably_ssl_pinning_keystore)) + "). Please manually check:", ["KeyStore", "Hacker"])
+				"The Keystores below seem using \"byte array\" or \"hard-coded cert info\" to do SSL pinning (Total: " + str(len(list_no_pwd_probably_ssl_pinning_keystore)) + "). Please check manually:", ["KeyStore", "Hacker"])
 
 			for keystore in list_no_pwd_probably_ssl_pinning_keystore:
 				writer.show_Path(d, keystore)
@@ -1674,7 +1682,7 @@ Please modify the below code:"""
 		if list_no_pwd_keystore:
 
 			writer.startWriter("HACKER_KEYSTORE_NO_PWD", LEVEL_CRITICAL, "KeyStore Protection Checking",
-				"The Keystores below seem \"NOT\" protected by password (Total: " + str(len(list_no_pwd_keystore)) + "). Please manually check:", ["KeyStore", "Hacker"])
+				"The Keystores below seem \"NOT\" protected by password (Total: " + str(len(list_no_pwd_keystore)) + "). Please check manually:", ["KeyStore", "Hacker"])
 
 			for keystore in list_no_pwd_keystore:
 				writer.show_Path(d, keystore)
@@ -1709,17 +1717,17 @@ Please modify the below code:"""
 
 	if list_keystore_file_name or list_possible_keystore_file_name :
 		if list_keystore_file_name :
-			writer.startWriter("HACKER_KEYSTORE_LOCATION1", LEVEL_NOTICE, "KeyStore File Location", "BKS Keystore file:", ["KeyStore", "Hacker"])
+			writer.startWriter("HACKER_KEYSTORE_LOCATION1", LEVEL_NOTICE, "KeyStore File Location", "BKS Keystore files:", ["KeyStore", "Hacker"])
 			for i in list_keystore_file_name:
 				writer.write(i)
 
 		if list_possible_keystore_file_name:
-			writer.startWriter("HACKER_KEYSTORE_LOCATION2", LEVEL_NOTICE, "Possible KeyStore File Location", "BKS possible keystore file:", ["KeyStore", "Hacker"])
+			writer.startWriter("HACKER_KEYSTORE_LOCATION2", LEVEL_NOTICE, "Possible KeyStore File Location", "BKS possible keystore files:", ["KeyStore", "Hacker"])
 			for i in list_possible_keystore_file_name:
 				writer.write(i)
 	else :
 		writer.startWriter("HACKER_KEYSTORE_LOCATION1", LEVEL_INFO, "KeyStore File Location",
-			"Did not find any possible BKS keystores or certificate keystore file (Notice: It does not mean this app does not use keysotre):", ["KeyStore", "Hacker"])
+			"Did not find any possible BKS keystores or certificate keystore files (Notice: It does not mean this app does not use keysotre).", ["KeyStore", "Hacker"])
 
 	# ------------------------------------------------------------------------
 	#BKS KeyStore checking:
@@ -1740,7 +1748,7 @@ Please modify the below code:"""
 			list_Non_BKS_keystore.append(i.getPath())
 
 	if list_Non_BKS_keystore:
-		writer.startWriter("KEYSTORE_TYPE_CHECK", LEVEL_CRITICAL, "KeyStore Type Checking", "Android only accept 'BKS' type KeyStore. Please confirm you are using 'BKS' type KeyStore:", ["KeyStore"])
+		writer.startWriter("KEYSTORE_TYPE_CHECK", LEVEL_CRITICAL, "KeyStore Type Checking", "Android only accepts 'BKS' type KeyStore. Please confirm you are using 'BKS' type KeyStore:", ["KeyStore"])
 		for keystore in list_Non_BKS_keystore:
 			writer.show_Path(d, keystore)
 	else:
@@ -1770,11 +1778,11 @@ Please modify the below code:"""
 
 	if list_PackageInfo_signatures:
 		writer.startWriter("HACKER_SIGNATURE_CHECK", LEVEL_NOTICE, "Getting Signature Code Checking",
-			"This app has code checking the package signature in the code. It might be used to check for whether the app is hacked by the attackers.", ["Signature", "Hacker"])
+			"This app has code checking the package signature in the code. It might be used to check if the app is hacked by the attackers.", ["Signature", "Hacker"])
 		for signature in list_PackageInfo_signatures:
 			writer.show_Path(d, signature)
 	else:
-		writer.startWriter("HACKER_SIGNATURE_CHECK", LEVEL_INFO, "Getting Signature Code Checking", "Did not detect this app is checking the signature in the code.", ["Signature", "Hacker"])
+		writer.startWriter("HACKER_SIGNATURE_CHECK", LEVEL_INFO, "Getting Signature Code Checking", "Did not detect if this app is checking the signature in the code.", ["Signature", "Hacker"])
 
 	# ------------------------------------------------------------------------
 	#Developers preventing screenshot capturing checking:
@@ -1804,13 +1812,11 @@ Please modify the below code:"""
 
 	if list_code_for_preventing_screen_capture:
 		writer.startWriter("HACKER_PREVENT_SCREENSHOT_CHECK", LEVEL_NOTICE, "Code Setting Preventing Screenshot Capturing",
-			"""This app has code setting the preventing screenshot capturing.
-Example: getWindow().setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE);
-It is used by the developers to protect the app:""", ["Hacker"])
+			"""This app has code for preventing screenshot capturing. Example: getWindow().setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE); It is used by the developers to protect the app:""", ["Hacker"])
 		for interesting_code in list_code_for_preventing_screen_capture:
 			writer.show_Path(d, interesting_code)
 	else:
-		writer.startWriter("HACKER_PREVENT_SCREENSHOT_CHECK", LEVEL_INFO, "Code Setting Preventing Screenshot Capturing", "Did not detect this app has code setting preventing screenshot capturing.", ["Hacker"])
+		writer.startWriter("HACKER_PREVENT_SCREENSHOT_CHECK", LEVEL_INFO, "Code Setting Preventing Screenshot Capturing", "Did not detect if this app has code for preventing screenshot capturing.", ["Hacker"])
 
 
 	# ------------------------------------------------------------------------
@@ -1838,12 +1844,12 @@ It is used by the developers to protect the app:""", ["Hacker"])
 			list_Runtime_exec.append(i.getPath())
 
 	if path_Runtime_exec:
-		writer.startWriter("COMMAND", LEVEL_CRITICAL, "Runtime Command Checking", "This app is using critical function 'Runtime.getRuntime().exec(\"...\")'.\nPlease confirm these following code secions are not harmful:", ["Command"])
+		writer.startWriter("COMMAND", LEVEL_CRITICAL, "Runtime Command Checking", "This app is using critical function 'Runtime.getRuntime().exec(\"...\")'. Please confirm that these following code sections are not harmful:", ["Command"])
 
 		writer.show_Paths(d, path_Runtime_exec)
 
 		if list_Runtime_exec :
-			writer.startWriter("COMMAND_SU", LEVEL_CRITICAL, "Runtime Critical Command Checking", "Requesting for \"root\" permission code sections 'Runtime.getRuntime().exec(\"su\")' found (Critical but maybe false positive):", ["Command"])
+			writer.startWriter("COMMAND_SU", LEVEL_CRITICAL, "Runtime Critical Command Checking", "Requesting for \"root\" permission code sections 'Runtime.getRuntime().exec(\"su\")' found (Critical but maybe false positives):", ["Command"])
 
 			for path in list_Runtime_exec:
 				writer.show_Path(d, path)
@@ -1897,25 +1903,17 @@ It is used by the developers to protect the app:""", ["Hacker"])
 
 	if list_HOSTNAME_INNER_VERIFIER :
 
-		output_string = """This app allows Self-defined HOSTNAME VERIFIER to accept all Common Names(CN).
-This is a critical vulnerability and allows attackers to do MITM attacks with his valid certificate without your knowledge.
-Case example:
-(1)http://osvdb.org/96411
-(2)http://www.wooyun.org/bugs/wooyun-2010-042710
-(3)http://www.wooyun.org/bugs/wooyun-2010-052339
-Also check Google doc: http://developer.android.com/training/articles/security-ssl.html (Caution: Replacing HostnameVerifier can be very dangerous).
-OWASP Mobile Top 10 doc: https://www.owasp.org/index.php/Mobile_Top_10_2014-M3
-Check this book to see how to solve this issue: http://goo.gl/BFb65r
-
-To see what's the importance of Common Name(CN) verification.
-Use Google Chrome to navigate:
- - https://www.google.com   => SSL certificate is valid
- - https://60.199.175.158/  => This is the IP address of google.com, but the CN is not match, making the certificate invalid. You still can go Google.com but now you cannot distinguish attackers from normal users
-
+		output_string = """This app allows self-defined HOSTNAME VERIFIER to accept all Common Names (CN). This is a critical vulnerability and allows attackers to do MITM attacks with their valid certificate without your knowledge.
+References:
+  1. http://developer.android.com/training/articles/security-ssl.html (Caution: replacing HostnameVerifier can be very dangerous)
+  2. OWASP Mobile Top 10: https://www.owasp.org/index.php/Mobile_Top_10_2014-M3
+  3. Check this book to see how to solve this issue: http://goo.gl/BFb65r
+To see what's the importance of Common Name (CN) verification, use Google Chrome to navigate:
+  - https://www.google.com   => SSL certificate is valid
+  - https://60.199.175.158/  => This is the IP address of google.com, but the CN does not match, making the certificate invalid. You still can go Google.com but now you cannot distinguish attackers from normal users.
 Please check the code inside these methods:"""
 
 		writer.startWriter("SSL_CN1", LEVEL_CRITICAL, "SSL Implementation Checking (Verifying Host Name in Custom Classes)", output_string, ["SSL_Security"])
-
 
 		for method in list_HOSTNAME_INNER_VERIFIER :
 			writer.write(method.easy_print())
@@ -1945,21 +1943,14 @@ Please check the code inside these methods:"""
 
 	if path_HOSTNAME_INNER_VERIFIER_new_instance or filtered_ALLOW_ALL_HOSTNAME_VERIFIER_paths :
 
-		output_string = """This app does not check the validation of the CN(Common Name) of the SSL certificate ("ALLOW_ALL_HOSTNAME_VERIFIER" field or "AllowAllHostnameVerifier" class).
-This is a critical vulnerability and allows attackers to do MITM attacks with his valid certificate without your knowledge.
-Case example:
-(1)http://osvdb.org/96411
-(2)http://www.wooyun.org/bugs/wooyun-2010-042710
-(3)http://www.wooyun.org/bugs/wooyun-2010-052339
-Also check Google doc: http://developer.android.com/training/articles/security-ssl.html (Caution: Replacing HostnameVerifier can be very dangerous).
-OWASP Mobile Top 10 doc: https://www.owasp.org/index.php/Mobile_Top_10_2014-M3
-Check this book to see how to solve this issue: http://goo.gl/BFb65r
-
-To see what's the importance of Common Name(CN) verification.
-Use Google Chrome to navigate:
- - https://www.google.com   => SSL certificate is valid
- - https://60.199.175.158/  => This is the IP address of google.com, but the CN is not match, making the certificate invalid. You still can go Google.com but now you cannot distinguish attackers from normal users
-
+		output_string = """This app does not check the validation of the CN (Common Name) of the SSL certificate ("ALLOW_ALL_HOSTNAME_VERIFIER" field or "AllowAllHostnameVerifier" class). This is a critical vulnerability and allows attackers to do MITM attacks with their valid certificate without your knowledge.
+References:
+  1. http://developer.android.com/training/articles/security-ssl.html (Caution: replacing HostnameVerifier can be very dangerous)
+  2. OWASP Mobile Top 10: https://www.owasp.org/index.php/Mobile_Top_10_2014-M3
+  3. Check this book to see how to solve this issue: http://goo.gl/BFb65r
+To see what's the importance of Common Name (CN) verification, use Google Chrome to navigate:
+  - https://www.google.com   => SSL certificate is valid
+  - https://60.199.175.158/  => This is the IP address of google.com, but the CN does not match, making the certificate invalid. You still can go Google.com but now you cannot distinguish attackers from normal users.
 Please check the code inside these methods:"""
 
 		writer.startWriter("SSL_CN2", LEVEL_CRITICAL, "SSL Implementation Checking (Verifying Host Name in Fields)", output_string, ["SSL_Security"])
@@ -1995,14 +1986,12 @@ Please check the code inside these methods:"""
 
 	if path_getInsecure:
 
-		output_string = """Sockets created using this factory(insecure method "getInsecure") are vulnerable to man-in-the-middle attacks.
-Check the reference: http://developer.android.com/reference/android/net/SSLCertificateSocketFactory.html#getInsecure(int, android.net.SSLSessionCache).
-Please remove the insecure code:"""
+		output_string = """Sockets created using this factory (insecure method "getInsecure") are vulnerable to man-in-the-middle attacks. Check the reference: http://developer.android.com/reference/android/net/SSLCertificateSocketFactory.html#getInsecure(int, android.net.SSLSessionCache). Please remove the insecure code:"""
 
 		writer.startWriter("SSL_CN3", LEVEL_CRITICAL, "SSL Implementation Checking (Insecure component)", output_string, ["SSL_Security"])
 		writer.show_Paths(d, path_getInsecure)
 	else:
-		writer.startWriter("SSL_CN3", LEVEL_INFO, "SSL Implementation Checking (Insecure component)", "Did not detect SSLSocketFactory by insecure method \"getInsecure\".", ["SSL_Security"])
+		writer.startWriter("SSL_CN3", LEVEL_INFO, "SSL Implementation Checking (Insecure component)", "Did not detect SSLSocketFactory using insecure method \"getInsecure\".", ["SSL_Security"])
 
 	# -------------------------------------------------------
 
@@ -2031,12 +2020,12 @@ Please remove the insecure code:"""
 
 	if list_HttpHost_scheme_http:
 		writer.startWriter("SSL_DEFAULT_SCHEME_NAME", LEVEL_CRITICAL, "SSL Implementation Checking (HttpHost)",
-			"This app uses \"HttpHost\", but the default scheme is \"http\" or \"HttpHost.DEFAULT_SCHEME_NAME(http)\". Please change to \"https\":", ["SSL_Security"])
+			"This app uses \"HttpHost\", but the default scheme is \"http\" or \"HttpHost.DEFAULT_SCHEME_NAME (http)\". Please change to \"https\":", ["SSL_Security"])
 
 		for i in list_HttpHost_scheme_http:
 			writer.show_Path(d, i)
 	else:
-		writer.startWriter("SSL_DEFAULT_SCHEME_NAME", LEVEL_INFO, "SSL Implementation Checking (HttpHost)", "DEFAULT_SCHEME_NAME for HttpHost check: OK", ["SSL_Security"])
+		writer.startWriter("SSL_DEFAULT_SCHEME_NAME", LEVEL_INFO, "SSL Implementation Checking (HttpHost)", "DEFAULT_SCHEME_NAME for HttpHost check is OK.", ["SSL_Security"])
 
 	# ------------------------------------------------------------------------
 	#WebViewClient onReceivedSslError errors
@@ -2058,10 +2047,9 @@ Please remove the insecure code:"""
 		writer.startWriter("SSL_WEBVIEW", LEVEL_CRITICAL, "SSL Implementation Checking (WebViewClient for WebView)",
 			"""DO NOT use "handler.proceed();" inside those methods in extended "WebViewClient", which allows the connection even if the SSL Certificate is invalid (MITM Vulnerability).
 References:
-(1)A View To A Kill: WebView Exploitation: https://www.iseclab.org/papers/webview_leet13.pdf
-(2)OWASP Mobile Top 10 doc: https://www.owasp.org/index.php/Mobile_Top_10_2014-M3
-(3)https://jira.appcelerator.org/browse/TIMOB-4488
-Vulnerable codes:
+  1. OWASP Mobile Top 10: https://www.owasp.org/index.php/Mobile_Top_10_2014-M3
+  2. https://jira.appcelerator.org/browse/TIMOB-4488
+Vulnerable code:
 """, ["SSL_Security"])
 
 		for method in list_webviewClient :
@@ -2073,7 +2061,7 @@ Vulnerable codes:
 				writer.show_Paths(d, dic_webviewClient_new_instance[method_class_name])
 
 	else :
-		writer.startWriter("SSL_WEBVIEW", LEVEL_INFO, "SSL Implementation Checking (WebViewClient for WebView)", "Did not detect critical usage of \"WebViewClient\"(MITM Vulnerability).", ["SSL_Security"])
+		writer.startWriter("SSL_WEBVIEW", LEVEL_INFO, "SSL Implementation Checking (WebViewClient for WebView)", "Did not detect any critical usage of \"WebViewClient\" (MITM Vulnerability).", ["SSL_Security"])
 
 
 	# ------------------------------------------------------------------------
@@ -2102,7 +2090,7 @@ Vulnerable codes:
 
 	if list_setJavaScriptEnabled_XSS:
 		writer.startWriter("WEBVIEW_JS_ENABLED", LEVEL_WARNING, "WebView Potential XSS Attacks Checking",
-			"Found \"setJavaScriptEnabled(true)\" in WebView, which could exposed to potential XSS attacks. Please check the web page code carefully and sanitize the output:", ["WebView"])
+			"Found \"setJavaScriptEnabled(true)\" in WebView, which could expose to potential XSS attacks. Please check the web page code carefully and sanitize the output:", ["WebView"])
 		for i in list_setJavaScriptEnabled_XSS:
 			writer.show_Path(d, i)
 	else:
@@ -2153,24 +2141,21 @@ Vulnerable codes:
 			if has_http_keepAlive_Name:
 				if has_http_keepAlive_Value:
 					writer.startWriter("HTTPURLCONNECTION_BUG", LEVEL_INFO, "HttpURLConnection Android Bug Checking",
-						"System property \"http.keepAlive\" for \"HttpURLConnection\" sets correctly.")
+						"System property \"http.keepAlive\" for \"HttpURLConnection\" is set correctly.")
 
 				else:
-					output_string = """You should set System property "http.keepAlive" to "false"
-You're using "HttpURLConnection". Prior to Android 2.2 (Froyo), "HttpURLConnection" had some frustrating bugs.
-In particular, calling close() on a readable InputStream could poison the connection pool. Work around this by disabling connection pooling:
-Please check the reference:
- (1)http://developer.android.com/reference/java/net/HttpURLConnection.html
- (2)http://android-developers.blogspot.tw/2011/09/androids-http-clients.html"""
+					output_string = """System property "http.keepAlive" should be set to "false". "HttpURLConnection" is used. Prior to Android 2.2 (Froyo), "HttpURLConnection" had some frustrating bugs. In particular, calling close() on a readable InputStream could poison the connection pool. Work around this by disabling connection pooling.
+References:
+  1. http://developer.android.com/reference/java/net/HttpURLConnection.html
+  2. http://android-developers.blogspot.tw/2011/09/androids-http-clients.html"""
 					writer.startWriter("HTTPURLCONNECTION_BUG", LEVEL_NOTICE, "HttpURLConnection Android Bug Checking", output_string)
 
 					writer.show_Paths(d, list_pre_Froyo_HttpURLConnection)     #Notice: list_pre_Froyo_HttpURLConnection
 			else:
-				output_string = """You're using "HttpURLConnection". Prior to Android 2.2 (Froyo), "HttpURLConnection" had some frustrating bugs.
-In particular, calling close() on a readable InputStream could poison the connection pool. Work around this by disabling connection pooling.
-Please check the reference:
- (1)http://developer.android.com/reference/java/net/HttpURLConnection.html
- (2)http://android-developers.blogspot.tw/2011/09/androids-http-clients.html"""
+				output_string = """""HttpURLConnection" is used. Prior to Android 2.2 (Froyo), "HttpURLConnection" had some frustrating bugs. In particular, calling close() on a readable InputStream could poison the connection pool. Work around this by disabling connection pooling.
+References:
+  1. http://developer.android.com/reference/java/net/HttpURLConnection.html
+  2. http://android-developers.blogspot.tw/2011/09/androids-http-clients.html"""
 
 				writer.startWriter("HTTPURLCONNECTION_BUG", LEVEL_NOTICE, "HttpURLConnection Android Bug Checking", output_string)
 				#Make it optional to list library
@@ -2178,11 +2163,11 @@ Please check the reference:
 
 		else:
 			writer.startWriter("HTTPURLCONNECTION_BUG", LEVEL_INFO, "HttpURLConnection Android Bug Checking",
-						"Ignore checking \"http.keepAlive\" because you're not using \"HttpURLConnection\".")
+						"Ignored checking \"http.keepAlive\" because \"HttpURLConnection\" is not used.")
 
 	else:
 		writer.startWriter("HTTPURLCONNECTION_BUG", LEVEL_INFO, "HttpURLConnection Android Bug Checking",
-			"Ignore checking \"http.keepAlive\" because you're not using \"HttpURLConnection\" and min_Sdk > 8.")
+			"Ignored checking \"http.keepAlive\" because \"HttpURLConnection\" is not used and minSdk > 8.")
 
 	# ------------------------------------------------------------------------
 	# SQLiteDatabase - beginTransactionNonExclusive() checking:
@@ -2194,16 +2179,16 @@ Please check the reference:
 
 		if path_SQLiteDatabase_beginTransactionNonExclusive :
 			output_string = StringHandler()
-			output_string.append("We detect you're using \"beginTransactionNonExclusive\" in your \"SQLiteDatabase\" but your minSdk supports down to " + str(int_min_sdk) + ".")
-			output_string.append("\"beginTransactionNonExclusive\" is not supported by API < 11. Please make sure you use \"beginTransaction\" in the earlier version of Android.")
+			output_string.append("We detected \"beginTransactionNonExclusive\" being used in \"SQLiteDatabase\" but minSdk supports down to " + str(int_min_sdk) + ". ")
+			output_string.append("\"beginTransactionNonExclusive\" is not supported by API < 11. Please make sure you use \"beginTransaction\" in the earlier version of Android. ")
 			output_string.append("Reference: http://developer.android.com/reference/android/database/sqlite/SQLiteDatabase.html#beginTransactionNonExclusive()")
 			writer.startWriter("DB_DEPRECATED_USE1", LEVEL_CRITICAL, "SQLiteDatabase Transaction Deprecated Checking", output_string.get(), ["Database"])
 
 			writer.show_Paths(d, path_SQLiteDatabase_beginTransactionNonExclusive)
 		else:
-			writer.startWriter("DB_DEPRECATED_USE1", LEVEL_INFO, "SQLiteDatabase Transaction Deprecated Checking", "Ignore checking \"SQLiteDatabase:beginTransactionNonExclusive\" you're not using it.", ["Database"])
+			writer.startWriter("DB_DEPRECATED_USE1", LEVEL_INFO, "SQLiteDatabase Transaction Deprecated Checking", "Ignored checking \"SQLiteDatabase:beginTransactionNonExclusive\" because it's not used.", ["Database"])
 	else:
-		writer.startWriter("DB_DEPRECATED_USE1", LEVEL_INFO, "SQLiteDatabase Transaction Deprecated Checking", "Ignore checking \"SQLiteDatabase:beginTransactionNonExclusive\" because your set minSdk >= 11.", ["Database"])
+		writer.startWriter("DB_DEPRECATED_USE1", LEVEL_INFO, "SQLiteDatabase Transaction Deprecated Checking", "Ignored checking \"SQLiteDatabase:beginTransactionNonExclusive\" because minSdk >= 11.", ["Database"])
 
 	# ------------------------------------------------------------------------
 
@@ -2295,7 +2280,7 @@ Please check the reference:
 
 	else:
 		writer.startWriter("MODE_WORLD_READABLE_OR_MODE_WORLD_WRITEABLE", LEVEL_INFO, "App Sandbox Permission Checking",
-			"No security issues \"MODE_WORLD_READABLE\" or \"MODE_WORLD_WRITEABLE\" found on 'openOrCreateDatabase' or 'openOrCreateDatabase2' or 'getDir' or 'getSharedPreferences' or 'openFileOutput'")
+			"No security issues \"MODE_WORLD_READABLE\" or \"MODE_WORLD_WRITEABLE\" found on 'openOrCreateDatabase' or 'openOrCreateDatabase2' or 'getDir' or 'getSharedPreferences' or 'openFileOutput'.")
 
 	# ------------------------------------------------------------------------
 	#List all native method
@@ -2326,13 +2311,13 @@ Please check the reference:
 		list_NDK_library_classname_to_ndkso_mapping.append([toNdkFileFormat(str(i.getResult()[0])), i.getPath()])
 
 	if list_NDK_library_classname_to_ndkso_mapping:
-		writer.startWriter("NATIVE_LIBS_LOADING", LEVEL_NOTICE, "Native Library Loading Checking", "Native library loading codes(System.loadLibrary(...)) found:")
+		writer.startWriter("NATIVE_LIBS_LOADING", LEVEL_NOTICE, "Native Library Loading Checking", "Native library loading code (System.loadLibrary(...)) found:")
 
 		for ndk_location , path in list_NDK_library_classname_to_ndkso_mapping:
 			writer.write("[" + ndk_location + "]")
 			writer.show_Path(d, path)
 	else:
-		writer.startWriter("NATIVE_LIBS_LOADING", LEVEL_INFO, "Native Library Loading Checking", "No native library loaded.")
+		writer.startWriter("NATIVE_LIBS_LOADING", LEVEL_INFO, "Native Library Loading Checking", "No native library loading code found.")
 
 	dic_native_methods = {}
 	regexp_sqlcipher_database_class = re.compile(".*/SQLiteDatabase;")
@@ -2368,7 +2353,7 @@ Please check the reference:
 
 	else:
 		if args.extra == 2 : #The output may be too verbose, so make it an option
-			writer.startWriter("NATIVE_METHODS", LEVEL_INFO, "Native Methods Checking", "No native method found.")
+			writer.startWriter("NATIVE_METHODS", LEVEL_INFO, "Native Methods Checking", "No native methods found.")
 
 	#Framework Detection: Bangcle
 
@@ -2404,10 +2389,10 @@ Please check the reference:
 
 		if is_using_Framework_Bangcle :
 			writer.startWriter("FRAMEWORK_BANGCLE", LEVEL_NOTICE, "Encryption Framework - Bangcle",
-				"This app is using Bangcle Encryption Framework (http://www.bangcle.com/). Please send your unencrypted apk instead so that we can check thoroughly.", ["Framework"])
+				"This app is using Bangcle Encryption Framework (http://www.bangcle.com/). Please send your unencrypted apk instead so that we can check it thoroughly.", ["Framework"])
 		if is_using_Framework_ijiami :
 			writer.startWriter("FRAMEWORK_IJIAMI", LEVEL_NOTICE, "Encryption Framework - Ijiami",
-				"This app is using Ijiami Encryption Framework (http://www.ijiami.cn/). Please send your unencrypted apk instead so that we can check thoroughly.", ["Framework"])
+				"This app is using Ijiami Encryption Framework (http://www.ijiami.cn/). Please send your unencrypted apk instead so that we can check it thoroughly.", ["Framework"])
 
 	if is_using_Framework_MonoDroid :
 		writer.startWriter("FRAMEWORK_MONODROID", LEVEL_NOTICE, "Framework - MonoDroid", "This app is using MonoDroid Framework (http://xamarin.com/android).", ["Framework"])
@@ -2420,25 +2405,24 @@ Please check the reference:
 	paths_DexClassLoader = vmx.get_tainted_packages().search_methods( "Ldalvik/system/DexClassLoader;", ".", ".")
 	paths_DexClassLoader = filteringEngine.filter_list_of_paths(d, paths_DexClassLoader)
 	if paths_DexClassLoader:
-		writer.startWriter("DYNAMIC_CODE_LOADING", LEVEL_WARNING, "Dynamic Code Loading", "Dynamic code loading(DexClassLoader) found:")
+		writer.startWriter("DYNAMIC_CODE_LOADING", LEVEL_WARNING, "Dynamic Code Loading", "Dynamic code loading (DexClassLoader) found:")
 		writer.show_Paths(d, paths_DexClassLoader)
 	else:
-		writer.startWriter("DYNAMIC_CODE_LOADING", LEVEL_INFO, "Dynamic Code Loading", "No dynamic code loading(DexClassLoader) found.")
-
+		writer.startWriter("DYNAMIC_CODE_LOADING", LEVEL_INFO, "Dynamic Code Loading", "No dynamic code loading (DexClassLoader) found.")
 
 	# ------------------------------------------------------------------------
-	#Get External Storage Directory access invoke
+	# Get External Storage Directory access invoke
 
 	paths_ExternalStorageAccess = vmx.get_tainted_packages().search_class_methods_exact_match("Landroid/os/Environment;", "getExternalStorageDirectory", "()Ljava/io/File;")
 	paths_ExternalStorageAccess = filteringEngine.filter_list_of_paths(d, paths_ExternalStorageAccess)
 	if paths_ExternalStorageAccess:
-		writer.startWriter("EXTERNAL_STORAGE", LEVEL_WARNING, "External Storage Accessing", "External storage access found (Remember DO NOT write important files to external storages):")
+		writer.startWriter("EXTERNAL_STORAGE", LEVEL_WARNING, "External Storage Accessing", "External storage access found (Remember: DO NOT write important files to external storage):")
 		writer.show_Paths(d, paths_ExternalStorageAccess)
 	else:
 		writer.startWriter("EXTERNAL_STORAGE", LEVEL_INFO, "External Storage Accessing", "External storage access not found.")
 
 	# ------------------------------------------------------------------------
-	#Android Fragment Vulnerability (prior to Android 4.4)
+	# Android Fragment Vulnerability (prior to Android 4.4)
 
 	prog = re.compile("Landroid/support/v(\d*)/app/Fragment;")
 	REGEXP_EXCLUDE_CLASSESd_fragment_class = re.compile("(Landroid/support/)|(Lcom/actionbarsherlock/)")
@@ -2484,13 +2468,12 @@ Please check the reference:
 	if list_Fragment_vulnerability_NonMethod_classes or list_Fragment_vulnerability_Method_OnlyReturnTrue_methods or list_Fragment_vulnerability_Method_NoIfOrSwitch_methods:
 
 		output_string = """'Fragment' or 'Fragment for ActionbarSherlock' has a severe vulnerability prior to Android 4.4 (API 19).
-Please check:
-(1)http://developer.android.com/reference/android/os/Build.VERSION_CODES.html#KITKAT
-(2)http://developer.android.com/reference/android/preference/PreferenceActivity.html#isValidFragment(java.lang.String)
-(3)http://stackoverflow.com/questions/19973034/isvalidfragment-android-api-19
-(4)http://securityintelligence.com/new-vulnerability-android-framework-fragment-injection/
-(5)http://securityintelligence.com/wp-content/uploads/2013/12/android-collapses-into-fragments.pdf
-(6)https://cureblog.de/2013/11/cve-2013-6271-remove-device-locks-from-android-phone/ """
+References:
+  1. http://developer.android.com/reference/android/os/Build.VERSION_CODES.html#KITKAT
+  2. http://developer.android.com/reference/android/preference/PreferenceActivity.html#isValidFragment(java.lang.String)
+  3. http://stackoverflow.com/questions/19973034/isvalidfragment-android-api-19
+  4. http://securityintelligence.com/new-vulnerability-android-framework-fragment-injection/
+  5. http://securityintelligence.com/wp-content/uploads/2013/12/android-collapses-into-fragments.pdf"""
 
 		writer.startWriter("FRAGMENT_INJECTION", LEVEL_CRITICAL, "Fragment Vulnerability Checking", output_string, None, "BID 64208, CVE-2013-6271")
 
@@ -2502,13 +2485,12 @@ Please check:
 					writer.write("    " + i)
 			else:
 				#You must override. Otherwise, it always throws Exception
-				writer.write("These \"PreferenceActivity\" classes may be vulnerable because they do not override 'isValidFragment' method (If you do not load any fragment in the PreferenceActivity, please still override 'isValidFragment' method and only return \"false\" to secure your app in the future changes) :")
+				writer.write("These \"PreferenceActivity\" classes may be vulnerable because they do not override 'isValidFragment' method (If you do not load any fragment in the PreferenceActivity, please still override 'isValidFragment' method and only return \"false\" to secure your app in the future changes):")
 				for i in list_Fragment_vulnerability_NonMethod_classes: #Notice: Each element in the list is NOT method, but String
 					writer.write("    " + i)
 
 		if list_Fragment_vulnerability_Method_OnlyReturnTrue_methods:
-			writer.write("You override 'isValidFragment' and only return \"true\" in those classes. You should use \"if\" condition to check whether the fragment is valid:")
-			writer.write("(Example code: http://stackoverflow.com/questions/19973034/isvalidfragment-android-api-19/20139823#20139823)")
+			writer.write("You override 'isValidFragment' and only return \"true\" in those classes. You should use \"if\" condition to check whether the fragment is valid (Example code: http://stackoverflow.com/questions/19973034/isvalidfragment-android-api-19/20139823#20139823):")
 			for method in list_Fragment_vulnerability_Method_OnlyReturnTrue_methods:
 				writer.write("    " + method.easy_print())
 
@@ -2518,7 +2500,7 @@ Please check:
 				writer.write("    " + method.easy_print())
 
 		if list_Fragment:
-			writer.write("All of the potential vulnerable \"fragment\":")
+			writer.write("All the potential vulnerable \"fragment\":")
 			for i in list_Fragment:
 				writer.write("    " + i)
 
@@ -2546,11 +2528,7 @@ Please check:
 	if dangerous_custom_permissions :
 
 		writer.startWriter("PERMISSION_DANGEROUS", LEVEL_CRITICAL, "AndroidManifest Dangerous ProtectionLevel of Permission Checking",
-			"""The protection level of the below classes is "dangerous", allowing any other apps to access this permission (AndroidManifest.xml).
-The app should declare the permission with the "android:protectionLevel" of "signature" or "signatureOrSystem" so that other apps cannot register and receive message for this app.
-android:protectionLevel="signature" ensures that apps with request a permission must be signed with same certificate as the application that declared the permission.
-Please check some related cases: http://www.wooyun.org/bugs/wooyun-2010-039697
-Please change these permissions:""")
+			"""The protection level of the below classes is "dangerous", allowing any other apps to access this permission (AndroidManifest.xml). The app should declare the permission with the "android:protectionLevel" of "signature" or "signatureOrSystem" so that other apps cannot register and receive messages for this app. android:protectionLevel="signature" ensures that apps which request a permission must be signed with same certificate as the application that declared the permission. Please change these permissions:""")
 
 		for class_name in dangerous_custom_permissions :
 			writer.write(class_name)
@@ -2576,10 +2554,7 @@ Please change these permissions:""")
 
 	if normal_or_default_custom_permissions :
 		writer.startWriter("PERMISSION_NORMAL", LEVEL_WARNING, "AndroidManifest Normal ProtectionLevel of Permission Checking",
-			"""The protection level of the below classes is "normal" or default (AndroidManifest.xml).
-The app should declare the permission with the "android:protectionLevel" of "signature" or "signatureOrSystem" so that other apps cannot register and receive message for this app.
-android:protectionLevel="signature" ensures that apps with request a permission must be signed with same certificate as the application that declared the permission.
-Please make sure these permission are all really need to be exported or otherwise change to "signature" or "signatureOrSystem" protection level.""")
+			"""The protection level of the below classes is "normal" or default (AndroidManifest.xml). The app should declare the permission with the "android:protectionLevel" of "signature" or "signatureOrSystem" so that other apps cannot register and receive messages for this app. android:protectionLevel="signature" ensures that apps which request a permission must be signed with same certificate as the application that declared the permission. Please make sure these permission really need to be exported or otherwise change to "signature" or "signatureOrSystem" protection level.""")
 		for class_name in normal_or_default_custom_permissions :
 			writer.write(class_name)
 			who_use_this_permission = get_all_components_by_permission(a.get_AndroidManifest(), class_name)
@@ -2609,9 +2584,8 @@ Please make sure these permission are all really need to be exported or otherwis
 	if list_lost_exported_components :
 		writer.startWriter("PERMISSION_NO_PREFIX_EXPORTED", LEVEL_CRITICAL, "AndroidManifest Exported Lost Prefix Checking",
 			"""Found exported components that forgot to add "android:" prefix (AndroidManifest.xml).
-Related Cases: (1)http://blog.curesec.com/article/blog/35.html
-               (2)http://safe.baidu.com/2014-07/cve-2013-6272.html
-               (3)http://blogs.360.cn/360mobile/2014/07/08/cve-2013-6272/""", None, "CVE-2013-6272")
+References:
+  1. http://blog.curesec.com/article/blog/35.html""", None, "CVE-2013-6272")
 
 		for tag, name in list_lost_exported_components :
 			writer.write(("%10s => %s") % (tag, a.format_value(name)))
@@ -2802,22 +2776,20 @@ Related Cases: (1)http://blog.curesec.com/article/blog/35.html
 	if list_alerting_exposing_components_NonGoogle or list_alerting_exposing_components_Google :
 		if list_alerting_exposing_components_NonGoogle:
 			writer.startWriter("PERMISSION_EXPORTED", LEVEL_WARNING, "AndroidManifest Exported Components Checking",
-				"""Found "exported" components(except for Launcher) for receiving outside applications' actions (AndroidManifest.xml).
-These components can be initilized by other apps. You should add or modify the attribute to [exported="false"] if you don't want to.
-You can also protect it with a customized permission with "signature" or higher protectionLevel and specify in "android:permission" attribute.""")
+				"""Found "exported" components (except for Launcher) for receiving outside applications' actions (AndroidManifest.xml). These components can be initilized by other apps. You should add or modify the attribute to [exported="false"] if you don't want to. You can also protect it with a customized permission with "signature" or higher protectionLevel and specify it in "android:permission" attribute.""")
 
 			for i in list_alerting_exposing_components_NonGoogle:
 				writer.write(("%10s => %s") % (i[0], i[1]))
 
 		if list_alerting_exposing_components_Google:
 			writer.startWriter("PERMISSION_EXPORTED_GOOGLE", LEVEL_NOTICE, "AndroidManifest Exported Components Checking 2",
-				"Found \"exported\" components(except for Launcher) for receiving Google's \"Android\" actions (AndroidManifest.xml):")
+				"Found \"exported\" components (except for Launcher) for receiving Google's \"Android\" actions (AndroidManifest.xml):")
 
 			for i in list_alerting_exposing_components_Google:
 				writer.write(("%10s => %s") % (i[0], i[1]))
 	else :
 		writer.startWriter("PERMISSION_EXPORTED", LEVEL_INFO, "AndroidManifest Exported Components Checking",
-			"No exported components(except for Launcher) for receiving Android or outside applications' actions (AndroidManifest.xml).")
+			"No exported components (except for Launcher) for receiving Android or outside applications' actions (AndroidManifest.xml).")
 
 	# ------------------------------------------------------------------------
 	#"exported" checking (provider):
@@ -2883,16 +2855,13 @@ You can also protect it with a customized permission with "signature" or higher 
 For Android "android:targetSdkVersion" < 17, the exported value of ContentProvider is "true" by default.
 For Android "android:targetSdkVersion" >= 17, the exported value of ContentProvider is "false" by default.
 Which means if you do not explicitly set the "android:exported", you will expose your ContentProvider to Android < 4.2 devices.
-Even if you set the provider the permission with [protectionalLevel="normal"], other apps still cannot access it on Android >= 4.2 devices because of the default constraint.
+Even if you set the provider with the permission [protectionalLevel="normal"], other apps still cannot access it on Android >= 4.2 devices because of the default constraints.
 Please make sure to set exported to "true" if you initially want other apps to use it (including protected by "signature" protectionalLevel), and set to "false" if your do not want to.
-Please still specify the "exported" to "true" if you have already set the corresponding "permission", "writePermission" or "readPermission" to "signature" protectionLevel or higher
-because other apps signed by the same signature in Android >= 4.2 devices cannot access it.
+Please still specify the "exported" to "true" if you have already set the corresponding "permission", "writePermission" or "readPermission" to "signature" protectionLevel or higher because other apps signed by the same signature in Android >= 4.2 devices cannot access it.
 Reference: http://developer.android.com/guide/topics/manifest/provider-element.html#exported
 Vulnerable ContentProvider Case Example:
-  (1)https://www.nowsecure.com/mobile-security/ebay-android-content-provider-injection-vulnerability.html
-  (2)http://blog.trustlook.com/2013/10/23/ebay-android-content-provider-information-disclosure-vulnerability/
-  (3)http://www.wooyun.org/bugs/wooyun-2010-039169
-""")
+  1. https://www.nowsecure.com/mobile-security/ebay-android-content-provider-injection-vulnerability.html
+  2. http://blog.trustlook.com/2013/10/23/ebay-android-content-provider-information-disclosure-vulnerability/""")
 
 			for i in list_alerting_exposing_providers_no_exported_setting :
 				writer.write(("%10s => %s") % ("provider", i[0]))
@@ -2902,9 +2871,8 @@ Vulnerable ContentProvider Case Example:
 			writer.startWriter("PERMISSION_PROVIDER_EXPLICIT_EXPORTED", LEVEL_CRITICAL, "AndroidManifest ContentProvider Exported Checking",
 				"""Found "exported" ContentProvider, allowing any other app on the device to access it (AndroidManifest.xml). You should modify the attribute to [exported="false"] or set at least "signature" protectionalLevel permission if you don't want to.
 Vulnerable ContentProvider Case Example:
-  (1)https://www.nowsecure.com/mobile-security/ebay-android-content-provider-injection-vulnerability.html
-  (2)http://blog.trustlook.com/2013/10/23/ebay-android-content-provider-information-disclosure-vulnerability/
-  (3)http://www.wooyun.org/bugs/wooyun-2010-039169""")
+  1. https://www.nowsecure.com/mobile-security/ebay-android-content-provider-injection-vulnerability.html
+  2. http://blog.trustlook.com/2013/10/23/ebay-android-content-provider-information-disclosure-vulnerability/""")
 			for i in list_alerting_exposing_providers:
 				writer.write(("%10s => %s") % ("provider", i[0]))
 
@@ -2951,8 +2919,7 @@ Vulnerable ContentProvider Case Example:
 	if list_wrong_intent_filter_settings or list_no_actions_in_intent_filter :
 		if list_wrong_intent_filter_settings :
 			writer.startWriter("PERMISSION_INTENT_FILTER_MISCONFIG", LEVEL_WARNING, "AndroidManifest \"intent-filter\" Settings Checking",
-				"""Misconfiguration in "intent-filter" of these components (AndroidManifest.xml).
-Config "intent-filter" should not have "android:exported" or "android:enabled" attribute.
+				"""Misconfiguration in "intent-filter" of these components (AndroidManifest.xml). Config "intent-filter" should not have "android:exported" or "android:enabled" attribute.
 Reference: http://developer.android.com/guide/topics/manifest/intent-filter-element.html
 """)
 			for tag, name in list_wrong_intent_filter_settings :
@@ -2960,8 +2927,7 @@ Reference: http://developer.android.com/guide/topics/manifest/intent-filter-elem
 
 		if list_no_actions_in_intent_filter :
 			writer.startWriter("PERMISSION_INTENT_FILTER_MISCONFIG", LEVEL_CRITICAL, "AndroidManifest \"intent-filter\" Settings Checking",
-				"""Misconfiguration in "intent-filter" of these components (AndroidManifest.xml).
-Config "intent-filter" should have at least one "action".
+				"""Misconfiguration in "intent-filter" of these components (AndroidManifest.xml). Config "intent-filter" should have at least one "action".
 Reference: http://developer.android.com/guide/topics/manifest/intent-filter-element.html
 """)
 			for tag, name in list_no_actions_in_intent_filter :
@@ -2983,7 +2949,7 @@ Reference: http://developer.android.com/guide/components/intents-filters.html#Ty
 
 	else :
 		writer.startWriter("PERMISSION_IMPLICIT_SERVICE", LEVEL_INFO, "Implicit Service Checking",
-			"No dangerous implicit service.", ["Implicit_Intent"])
+			"No dangerous implicit service found.", ["Implicit_Intent"])
 
 	# ------------------------------------------------------------------------
 	#SQLite databases
@@ -2992,12 +2958,10 @@ Reference: http://developer.android.com/guide/components/intents-filters.html#Ty
 	if is_using_android_dbs :
 		if int_min_sdk < 15 :
 			writer.startWriter("DB_SQLITE_JOURNAL", LEVEL_NOTICE, "Android SQLite Databases Vulnerability Checking",
-				"""This app is using Android SQLite databases.
-Prior to Android 4.0, Android has SQLite Journal Information Disclosure Vulnerability.
-But it can only be solved by users upgrading to Android > 4.0 and YOU CANNOT SOLVE IT BY YOURSELF (But you can use encrypt your databases and Journals by "SQLCipher" or other libs).
+				"""This app is using Android SQLite databases. Prior to Android 4.0, Android has SQLite Journal Information Disclosure Vulnerability. But it can only be solved by users upgrading to Android > 4.0 and YOU CANNOT SOLVE IT BY YOURSELF (But you can encrypt your databases and Journals by using "SQLCipher" or other libs).
 Proof-Of-Concept Reference:
-(1) http://blog.watchfire.com/files/androidsqlitejournal.pdf
-(2) http://www.youtube.com/watch?v=oCXLHjmH5rY """, ["Database"], "CVE-2011-3901")
+  1. http://blog.watchfire.com/files/androidsqlitejournal.pdf
+  2. http://www.youtube.com/watch?v=oCXLHjmH5rY""", ["Database"], "CVE-2011-3901")
 		else :
 			writer.startWriter("DB_SQLITE_JOURNAL", LEVEL_NOTICE, "Android SQLite Databases Vulnerability Checking",
 				"This app is using Android SQLite databases but it's \"NOT\" suffering from SQLite Journal Information Disclosure Vulnerability.", ["Database"], "CVE-2011-3901")
@@ -3010,7 +2974,7 @@ Proof-Of-Concept Reference:
 	#Reference to <<Essential_Block_1>>
 	if isUsingSQLCipher :
 		writer.startWriter("DB_SQLCIPHER", LEVEL_NOTICE, "Android SQLite Databases Encryption (SQLCipher)",
-			"This app is using SQLCipher(http://sqlcipher.net/) to encrypt or decrpyt databases.", ["Database"])
+			"This app is using SQLCipher (http://sqlcipher.net/) to encrypt or decrypt databases.", ["Database"])
 
 		path_sqlcipher_dbs = vmx.get_tainted_packages().search_sqlcipher_databases()	#Don't do the exclusion checking on this one because it's not needed
 
@@ -3035,7 +2999,7 @@ Proof-Of-Concept Reference:
 
 	else :
 		writer.startWriter("DB_SQLCIPHER", LEVEL_INFO, "Android SQLite Databases Encryption (SQLCipher)",
-			"This app is \"NOT\" using SQLCipher(http://sqlcipher.net/) to encrypt or decrpyt databases.", ["Database"])
+			"This app is \"NOT\" using SQLCipher (http://sqlcipher.net/) to encrypt or decrypt databases.", ["Database"])
 
 	# ------------------------------------------------------------------------
 	#Find "SQLite Encryption Extension (SEE) on Android"
@@ -3047,11 +3011,11 @@ Proof-Of-Concept Reference:
 
 	if has_SSE_databases :
 		writer.startWriter("DB_SEE", LEVEL_NOTICE, "Android SQLite Databases Encryption (SQLite Encryption Extension (SEE))",
-			"This app is using SQLite Encryption Extension (SEE) on Android (http://www.sqlite.org/android) to encrypt or decrpyt databases.", ["Database"])
+			"This app is using SQLite Encryption Extension (SEE) on Android (http://www.sqlite.org/android) to encrypt or decrypt databases.", ["Database"])
 
 	else :
 		writer.startWriter("DB_SEE", LEVEL_INFO, "Android SQLite Databases Encryption (SQLite Encryption Extension (SEE))",
-			"This app is \"NOT\" using SQLite Encryption Extension (SEE) on Android (http://www.sqlite.org/android) to encrypt or decrpyt databases.", ["Database"])
+			"This app is \"NOT\" using SQLite Encryption Extension (SEE) on Android (http://www.sqlite.org/android) to encrypt or decrypt databases.", ["Database"])
 
 	# ------------------------------------------------------------------------
 	#Searching SQLite "PRAGMA key" encryption:
@@ -3059,13 +3023,13 @@ Proof-Of-Concept Reference:
 	result_sqlite_encryption = filteringEngine.filter_efficient_search_result_value(result_sqlite_encryption)
 	if result_sqlite_encryption :
 		writer.startWriter("HACKER_DB_KEY", LEVEL_NOTICE, "Key for Android SQLite Databases Encryption",
-			"Found using the symmetric key(PRAGMA key) to encrypt the SQLite databases. \nRelated code:", ["Database", "Hacker"])
+			"Found using the symmetric key (PRAGMA key) to encrypt the SQLite databases. Related code:", ["Database", "Hacker"])
 
 		for found_string, method in result_sqlite_encryption :
 			writer.write(method.get_class_name() + "->" + method.get_name() + method.get_descriptor())
 	else :
 		writer.startWriter("HACKER_DB_KEY", LEVEL_INFO, "Key for Android SQLite Databases Encryption",
-			"Did not find using the symmetric key(PRAGMA key) to encrypt the SQLite databases (It's still possible that it might use but we did not find out).", ["Database", "Hacker"])
+			"Did not find usages of the symmetric key (PRAGMA key) to encrypt the SQLite databases (It's still possible there are usages but we did not find out).", ["Database", "Hacker"])
 
 	# ------------------------------------------------------------------------
 	#Searching checking root or not:
@@ -3083,7 +3047,7 @@ Proof-Of-Concept Reference:
 
 	if result_possibly_root_total :
 		writer.startWriter("COMMAND_MAYBE_SYSTEM", LEVEL_NOTICE, "Executing \"root\" or System Privilege Checking",
-			"The app may has the code checking for \"root\" permission, mounting filesystem operations or monitoring system:", ["Command"])
+			"The app may have the code checking for \"root\" permission, mounting filesystem operations or monitoring system:", ["Command"])
 
 		list_possible_root = []
 		list_possible_remount_fs = []
@@ -3110,7 +3074,7 @@ Proof-Of-Concept Reference:
 	else :
 
 		writer.startWriter("COMMAND_MAYBE_SYSTEM", LEVEL_INFO, "Executing \"root\" or System Privilege Checking",
-			"Did not find codes checking \"root\" permission(su) or getting system permission (It's still possible we did not find out).", ["Command"])
+			"Did not find codes checking \"root\" permission (su) or getting system permission (It's still possible but we did not find out).", ["Command"])
 
 	# ------------------------------------------------------------------------
 	#Android getting IMEI, Android_ID, UUID problem
@@ -3121,21 +3085,19 @@ Proof-Of-Concept Reference:
 	if path_Device_id:
 
 		writer.startWriter("SENSITIVE_DEVICE_ID", LEVEL_WARNING, "Getting IMEI and Device ID",
-			"""This app has code getting the "device id(IMEI)" but there are problems with this "TelephonyManager.getDeviceId()" approach.
-1.Non-phones: Wifi-only devices or music players that don't have telephony hardware just don't have this kind of unique identifier.
-2.Persistence: On devices which do have this, it persists across device data wipes and factory resets. It's not clear at all if, in this situation, your app should regard this as the same device.
-3.Privilege:It requires READ_PHONE_STATE permission, which is irritating if you don't otherwise use or need telephony.
-4.Bugs: We have seen a few instances of production phones for which the implementation is buggy and returns garbage, for example zeros or asterisks.
-If you want to get an unique id for the device, we suggest you use "Installation" framework in the following article.
-Please check the reference: http://android-developers.blogspot.tw/2011/03/identifying-app-installations.html
-""", ["Sensitive_Information"])
+			"""This app has code getting the "device id (IMEI)" but there are problems with this "TelephonyManager.getDeviceId()" approach.
+  1. Non-phones: Wifi-only devices or music players that don't have telephony hardware just don't have this kind of unique identifier.
+  2. Persistence: On devices which do have this, it persists across device data wipes and factory resets. It's not clear at all if, in this situation, your app should regard this as the same device.
+  3. Privilege: It requires READ_PHONE_STATE permission, which is irritating if you don't otherwise use or need telephony.
+  4. Bugs: We have seen a few instances of production phones for which the implementation is buggy and returns garbage, for example zeros or asterisks.
+If you want to get an unique id for the device, we suggest you use "Installation" framework in the following article: http://android-developers.blogspot.tw/2011/03/identifying-app-installations.html.""", ["Sensitive_Information"])
 
 		writer.show_Paths(d, path_Device_id)
 
 	else:
 
 		writer.startWriter("SENSITIVE_DEVICE_ID", LEVEL_INFO, "Getting IMEI and Device ID",
-			"Did not detect this app is getting the \"device id(IMEI)\" by \"TelephonyManager.getDeviceId()\" approach.", ["Sensitive_Information"])
+			"Did not detect if this app is getting the \"device id(IMEI)\" by \"TelephonyManager.getDeviceId()\" approach.", ["Sensitive_Information"])
 
 	# ------------------------------------------------------------------------
 	#Android "android_id"
@@ -3152,19 +3114,14 @@ Please check the reference: http://android-developers.blogspot.tw/2011/03/identi
 
 	if list_android_id:
 		writer.startWriter("SENSITIVE_SECURE_ANDROID_ID", LEVEL_WARNING, "Getting ANDROID_ID",
-			"""This app has code getting the 64-bit number "Settings.Secure.ANDROID_ID".
-ANDROID_ID seems a good choice for a unique device identifier. There are downsides: First, it is not 100% reliable on releases of Android prior to 2.2 (Froyo).
-Also, there has been at least one widely-observed bug in a popular handset from a major manufacturer, where every instance has the same ANDROID_ID.
-If you want to get an unique id for the device, we suggest you use "Installation" framework in the following article.
-Please check the reference: http://android-developers.blogspot.tw/2011/03/identifying-app-installations.html
-""", ["Sensitive_Information"])
+			"""This app has code getting the 64-bit number "Settings.Secure.ANDROID_ID". ANDROID_ID seems a good choice for a unique device identifier. There are downsides: First, it is not 100% reliable on releases of Android prior to 2.2 (Froyo). Also, there has been at least one widely-observed bug in a popular handset from a major manufacturer, where every instance has the same ANDROID_ID. If you want to get an unique id for the device, we suggest you use "Installation" framework in the following article: http://android-developers.blogspot.tw/2011/03/identifying-app-installations.html.""", ["Sensitive_Information"])
 
 		for path in list_android_id :
 			writer.show_Path(d, path)
 	else:
 
 		writer.startWriter("SENSITIVE_SECURE_ANDROID_ID", LEVEL_INFO, "Getting ANDROID_ID",
-			"Did not detect this app is getting the 64-bit number \"Settings.Secure.ANDROID_ID\".", ["Sensitive_Information"])
+			"Did not detect if this app is getting the 64-bit number \"Settings.Secure.ANDROID_ID\".", ["Sensitive_Information"])
 
 	# ------------------------------------------------------------------------
 	#Checking sending SMS code
@@ -3191,7 +3148,7 @@ Please check the reference: http://android-developers.blogspot.tw/2011/03/identi
 		writer.show_Paths(d, path_sms_sending)
 	else:
 		writer.startWriter("SENSITIVE_SMS", LEVEL_INFO, "Codes for Sending SMS",
-			"Did not detect this app has code for sending SMS messages (sendDataMessage, sendMultipartTextMessage or sendTextMessage).")
+			"Did not detect if this app has code for sending SMS messages (sendDataMessage, sendMultipartTextMessage or sendTextMessage).")
 
 	# ------------------------------------------------------------------------
 	#Checking shared_user_id
@@ -3222,13 +3179,11 @@ Please check the reference: http://android-developers.blogspot.tw/2011/03/identi
 
 	if path_FileDelete :
 		writer.startWriter("FILE_DELETE", LEVEL_NOTICE, "File Unsafe Delete Checking",
-			"""Everything you delete may be recovered by any user or attacker, especially rooted devices.
-Please make sure do not use "file.delete()" to delete essential files.
-Check this video: https://www.youtube.com/watch?v=tGw1fxUD-uY""")
+			"""Everything you delete may be recovered by any user or attacker, especially on rooted devices. Please make sure not to use "file.delete()" to delete essential files. Check this video: https://www.youtube.com/watch?v=tGw1fxUD-uY.""")
 		writer.show_Paths(d, path_FileDelete)
 	else :
 		writer.startWriter("FILE_DELETE", LEVEL_INFO, "File Unsafe Delete Checking",
-			"Did not detect that you are unsafely deleting files.")
+			"Did not detect if files are being unsafely deleted.")
 
 	# ------------------------------------------------------------------------
 	#Check if app check for installing from Google Play
@@ -3238,11 +3193,11 @@ Check this video: https://www.youtube.com/watch?v=tGw1fxUD-uY""")
 
 	if path_getInstallerPackageName :
 		writer.startWriter("HACKER_INSTALL_SOURCE_CHECK", LEVEL_NOTICE, "APK Installing Source Checking",
-			"This app has code checking APK installer sources(e.g. from Google Play, from Amazon, etc.). It might be used to check for whether the app is hacked by the attackers.", ["Hacker"])
+			"This app has code checking APK installer sources (e.g. from Google Play, from Amazon etc.). It might be used to check for whether the app is hacked by the attackers.", ["Hacker"])
 		writer.show_Paths(d, path_getInstallerPackageName)
 	else :
 		writer.startWriter("HACKER_INSTALL_SOURCE_CHECK", LEVEL_INFO, "APK Installing Source Checking",
-			"Did not detect this app checks for APK installer sources.", ["Hacker"])
+			"Did not detect if this app checks for APK installer sources.", ["Hacker"])
 
 	# ------------------------------------------------------------------------
 	#WebView setAllowFileAccess:
@@ -3314,11 +3269,10 @@ Check this video: https://www.youtube.com/watch?v=tGw1fxUD-uY""")
 		path_setAllowFileAccess_confirm_vulnerable_src_class_func = sorted(set(path_setAllowFileAccess_confirm_vulnerable_src_class_func))
 
 		writer.startWriter("WEBVIEW_ALLOW_FILE_ACCESS", LEVEL_WARNING, "WebView Local File Access Attacks Checking",
-			"""Found "setAllowFileAccess(true)" or not set(enabled by default) in WebView. The attackers could inject malicious script into WebView and exploit the opportunity to access local resources. This can be mitigated or prevented by disabling local file system access. (It is enabled by default)
-Note that this enables or disables file system access only. Assets and resources are still accessible using file:///android_asset and file:///android_res.
-The attackers can use "mWebView.loadUrl("file:///data/data/[Your_Package_Name]/[File]");" to access app's local file.
-Reference: (1)https://labs.mwrinfosecurity.com/blog/2012/04/23/adventures-with-android-webviews/
-           (2)http://developer.android.com/reference/android/webkit/WebSettings.html#setAllowFileAccess(boolean)
+			"""Found "setAllowFileAccess(true)" or not set (enabled by default) in WebView. The attackers could inject malicious script into WebView and exploit the opportunity to access local resources. This can be mitigated or prevented by disabling local file system access (It is enabled by default). Note that this enables or disables file system access only. Assets and resources are still accessible using file:///android_asset and file:///android_res. The attackers can use 'mWebView.loadUrl("file:///data/data/[Your_Package_Name]/[File]");' to access app's local file.
+References:
+  1. https://labs.mwrinfosecurity.com/blog/2012/04/23/adventures-with-android-webviews/
+  2. http://developer.android.com/reference/android/webkit/WebSettings.html#setAllowFileAccess(boolean)
 Please add or modify "yourWebView.getSettings().setAllowFileAccess(false)" to your WebView:
 """, ["WebView"])
 		for i in path_setAllowFileAccess_confirm_vulnerable_src_class_func :
@@ -3326,19 +3280,19 @@ Please add or modify "yourWebView.getSettings().setAllowFileAccess(false)" to yo
 
 	else :
 		writer.startWriter("WEBVIEW_ALLOW_FILE_ACCESS", LEVEL_INFO, "WebView Local File Access Attacks Checking",
-			"Did not find potentially critical local file access settings.", ["WebView"])
+			"Did not find any potentially critical local file access settings.", ["WebView"])
 
 	# ------------------------------------------------------------------------
 	#Adb Backup check
 
 	if a.is_adb_backup_enabled() :
 		writer.startWriter("ALLOW_BACKUP", LEVEL_NOTICE, "AndroidManifest Adb Backup Checking",
-			"""ADB Backup is ENABLED for this app (default: ENABLED). ADB Backup is a good tool for backing up all of your files. If it's open for this app, people who have your phone can copy all of the sensitive data for this app in your phone (Prerequisite: 1.Unlock phone's screen 2.Open the developer mode). The sensitive data may include lifetime access token, username or password, etc.
-Security case related to ADB Backup:
-1.http://www.securityfocus.com/archive/1/530288/30/0/threaded
-2.http://blog.c22.cc/advisories/cve-2013-5112-evernote-android-insecure-storage-of-pin-data-bypass-of-pin-protection/
-3.http://nelenkov.blogspot.co.uk/2012/06/unpacking-android-backups.html
-Reference: http://developer.android.com/guide/topics/manifest/application-element.html#allowbackup
+			"""ADB Backup is ENABLED for this app (default: ENABLED). ADB Backup is a good tool for backing up all of your files. If it's open for this app, people who have your phone can copy all of the sensitive data for this app in your phone (Prerequisite: 1. Unlock phone's screen 2. Open the developer mode). The sensitive data may include lifetime access token, username or password, etc.
+References:
+  1. http://www.securityfocus.com/archive/1/530288/30/0/threaded
+  2. http://blog.c22.cc/advisories/cve-2013-5112-evernote-android-insecure-storage-of-pin-data-bypass-of-pin-protection/
+  3. http://nelenkov.blogspot.co.uk/2012/06/unpacking-android-backups.html
+  4. http://developer.android.com/guide/topics/manifest/application-element.html#allowbackup
 """)
 	else :
 		writer.startWriter("ALLOW_BACKUP", LEVEL_INFO, "AndroidManifest Adb Backup Checking",
@@ -3372,7 +3326,7 @@ Reference: http://developer.android.com/guide/topics/manifest/application-elemen
 	if list_X509Certificate_Critical_class or list_X509Certificate_Warning_class :
 
 		log_level = LEVEL_WARNING
-		log_partial_prefix_msg = "Please make sure this app has the conditions to check the validation of SSL Certificate. If it's not properly checked, it MAY allows self-signed, expired or mismatch CN certificates for SSL connection."
+		log_partial_prefix_msg = "Please make sure this app has the conditions to check the validation of SSL Certificate. If it's not properly checked, it MAY allow self-signed, expired or mismatch CN certificates for SSL connection."
 
 		if list_X509Certificate_Critical_class :
 			log_level = LEVEL_CRITICAL
@@ -3395,17 +3349,12 @@ Reference: http://developer.android.com/guide/topics/manifest/application-elemen
 						dict_X509Certificate_class_name_to_caller_mapping[referenced_class_name].append(method)
 
 		writer.startWriter("SSL_X509", log_level, "SSL Certificate Verification Checking",
-			log_partial_prefix_msg + """
-This is a critical vulnerability and allows attackers to do MITM attacks without your knowledge.
-If you are transmitting users' username or password, these sensitive information may be leaking.
-Reference:
-(1)OWASP Mobile Top 10 doc: https://www.owasp.org/index.php/Mobile_Top_10_2014-M3
-(2)Android Security book: http://goo.gl/BFb65r
-(3)https://www.securecoding.cert.org/confluence/pages/viewpage.action?pageId=134807561
-This vulnerability is much more severe than Apple's "goto fail" vulnerability: http://goo.gl/eFlovw
-Please do not try to create a "X509Certificate" and override "checkClientTrusted", "checkServerTrusted", and "getAcceptedIssuers" functions with blank implementation.
-We strongly suggest you use the existing API instead of creating your own X509Certificate class.
-Please modify or remove these vulnerable code:
+			log_partial_prefix_msg + """ This is a critical vulnerability and allows attackers to do MITM attacks without your knowledge. If you are transmitting users' username or password, these sensitive information may be leaked.
+References:
+  1. OWASP Mobile Top 10: https://www.owasp.org/index.php/Mobile_Top_10_2014-M3
+  2. Android Security book: http://goo.gl/BFb65r
+  3. https://www.securecoding.cert.org/confluence/pages/viewpage.action?pageId=134807561
+This vulnerability is much more severe than Apple's "goto fail" vulnerability: http://goo.gl/eFlovw. Please do not try to create a "X509Certificate" and override "checkClientTrusted", "checkServerTrusted", and "getAcceptedIssuers" functions with blank implementation. We strongly suggest you use the existing API instead of creating your own X509Certificate class. Please modify or remove this vulnerable code:
 """, ["SSL_Security"])
 		if list_X509Certificate_Critical_class :
 			writer.write("[Confirm Vulnerable]")
@@ -3426,7 +3375,7 @@ Please modify or remove these vulnerable code:
 
 	else :
 		writer.startWriter("SSL_X509", LEVEL_INFO, "SSL Certificate Verification Checking",
-				"Did not find vulnerable X509Certificate code.", ["SSL_Security"])
+				"Did not find any vulnerable X509Certificate code.", ["SSL_Security"])
 
 	#----------------------------------------------------------------
 	#Must complete the last writer
