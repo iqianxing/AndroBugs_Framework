@@ -494,9 +494,10 @@ class Writer:
         if not self.__file_io_result_output_list :
             self.load_to_output_list(args)
 
-        if self.__file_io_result_output_list :
-            for line in self.__file_io_result_output_list :
-                print(line)
+        # Uncomment the following code to increase output verbosity.
+        # if self.__file_io_result_output_list :
+        #     for line in self.__file_io_result_output_list :
+        #         print(line)
 
     def output(self, line) :	#Store here for later use on "print()" or "with ... open ..."
         # [Recorded here]
