@@ -366,14 +366,14 @@ class Writer:
         # [Recorded here]
         self.__file_io_information_output_list.append(str(msg))
 
-    def writeInf(self, key, value, extra_title, extra_print_original_title=False) :
+    def writeInf(self, key, value, extra_title, extra_print_original_title=False):
         # if DEBUG :
-        if extra_print_original_title :
-            print(str(extra_title))
+        if extra_print_original_title:
+            # print(str(extra_title))  # Uncomment this line to increase output verbosity
             # [Recorded here]
             self.__file_io_information_output_list.append(str(extra_title))
-        else :
-            print(extra_title + ": " + str(value))
+        else:
+            # print(extra_title + ": " + str(value))  # Uncomment this line to increase output verbosity
             # [Recorded here]
             self.__file_io_information_output_list.append(extra_title + ": " + str(value))
 
