@@ -62,7 +62,7 @@ python AndroBugs_ReportByVectorKey.py -v WEBVIEW_RCE -l Critical -b 20151112 -t 
 
 ##Requirements
 
-- Python 2.7.x (Python 3.X not supported at the moment)
+- Python 2.7.x (Python 3.x not supported at the moment)
 - [PyMongo library](http://api.mongodb.org/python/current/installation.html) (If you want to use the massive analysis tool)
 
 ##Licenses
