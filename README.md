@@ -19,6 +19,20 @@ Version: 1.0.0
 - Yu-Cheng Lin  (androbugs.framework at gmail.com, @AndroBugs)
 
 
+## Usage for Unix/Linux
+
+####To run the AndroBugs Framework:####
+
+```
+python androbugs.py -f [APK file]
+```
+
+####To check the usage:####
+
+```
+python androbugs.py -h
+```
+
 ## Usage of Massive Analysis Tools for Unix/Linux
 
 **Prerequisite: Setup MongoDB and configure your own MongoDB settings in "androbugs-db.cfg"**
