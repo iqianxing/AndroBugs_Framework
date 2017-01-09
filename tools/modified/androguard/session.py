@@ -39,22 +39,18 @@ class Session(object):
         digest = hashlib.sha256(data).hexdigest()
         androconf.debug("add APK:%s" % digest)
         apk = APK(data, True)
-        self.analyzed_apk[digest] = apk
+        self.analyzed_apk[digest] = [apk]
         self.analyzed_files[filename].append(digest)
         self.analyzed_digest[digest] = filename
         androconf.debug("added APK:%s" % digest)
         return (digest, apk)
 
-    def addDEX(self, filename, data):
+    def addDEX(self, filename, data, dx=None):
         digest = hashlib.sha256(data).hexdigest()
         androconf.debug("add DEX:%s" % digest)
 
         d = DalvikVMFormat(data)
-        androconf.debug("VMAnalysis ...")
-        dx = newVMAnalysis(d)
-        dx.create_xref()
-
-        d.set_decompiler(DecompilerDAD(d, dx))
+        dx = self.runAnalysis(d, dx)
 
         androconf.debug("added DEX:%s" % digest)
 
@@ -64,6 +60,34 @@ class Session(object):
 
         return (digest, d, dx)
 
+    def addDEY(self, filename, data, dx=None):
+        digest = hashlib.sha256(data).hexdigest()
+        androconf.debug("add DEY:%s" % digest)
+
+        d = DalvikOdexVMFormat(data)
+        dx = self.runAnalysis(d, dx)
+
+        androconf.debug("added DEY:%s" % digest)
+
+        self.analyzed_dex[digest] = (d, dx)
+        self.analyzed_files[filename].append(digest)
+        self.analyzed_digest[digest] = filename
+
+        return (digest, d, dx)
+
+    def runAnalysis(self, d, dx=None):
+        androconf.debug("VMAnalysis ...")
+
+        if dx is None:
+            dx = newVMAnalysis(d)
+        else:
+            dx.add(d)
+
+        dx.create_xref()
+        d.set_decompiler(DecompilerDAD(d, dx))
+
+        return dx
+
     def add(self, filename, raw_data):
         ret = is_android_raw(raw_data)
         if ret:
@@ -71,9 +95,18 @@ class Session(object):
             digest = hashlib.sha256(raw_data).hexdigest()
             if ret == "APK":
                 apk_digest, apk = self.addAPK(filename, raw_data)
-                self.addDEX(filename, apk.get_dex())
+                dex_files = list(apk.get_dex())
+
+                if dex_files:
+                    dex_digest, _, dx = self.addDEX(filename, dex_files[0])
+                    self.analyzed_apk[digest].append(dex_digest)
+                    for i in range(1, len(dex_files)):
+                        dex_digest, _, _ = self.addDEX(filename, dex_files[i], dx)
+                        self.analyzed_apk[digest].append(dex_digest)
             elif ret == "DEX":
                 self.addDEX(filename, raw_data)
+            elif ret == "DEY":
+                self.addDEY(filename, raw_data)
             else:
                 return False
             return True
@@ -127,3 +160,23 @@ class Session(object):
             d, dx = self.analyzed_dex[digest]
             nb += len(dx.get_strings_analysis())
         return nb
+
+    def get_objects_apk(self, filename):
+        digest = self.analyzed_files.get(filename)
+        if digest:
+            a = self.analyzed_apk[digest[0]][0]
+            d = None
+            dx = None
+
+            if len(self.analyzed_apk[digest[0]][1:]) > 1:
+                d = []
+                for dex_file in self.analyzed_apk[digest[0]][1:]:
+                    d.append(self.analyzed_dex[dex_file][0])
+            else:
+                dex_file = self.analyzed_dex[self.analyzed_apk[digest[0]][1]]
+                d = dex_file[0]
+                dx = dex_file[1]
+
+            return a, d, dx
+
+        return None
