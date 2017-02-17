@@ -3681,7 +3681,7 @@ def __analyze(writer, args):
     writer.writeInf_ForceNoPrint("time_finish_analyze", datetime.utcnow())
 
 
-def __persist_db(writer, args):
+def __persist_db(writer, args, username=None):
 
     # starting_dvm
     # starting_androbugs
@@ -3745,6 +3745,9 @@ def __persist_db(writer, args):
 
             packed_analyzed_results = writer.get_packed_analyzed_results_for_mongodb()	# "details" will only be shown when success
             packed_analyzed_results_fast_search = writer.get_search_enhanced_packed_analyzed_results_for_mongodb()	# specifically designed for Massive Analysis
+
+            # Add custom data to the database.
+            packed_analyzed_results['username'] = username
 
             collection_AppInfo = db[Collection_Analyze_Result]		# Name is case-sensitive
             collection_AppInfo.insert(packed_analyzed_results)
@@ -3815,7 +3818,7 @@ def __persist_file(writer, args):
         return False
 
 
-def main():
+def main(user=None):
 
     args = parseArgument()
 
@@ -3902,7 +3905,7 @@ def main():
 
     # Save to the DB
     if args.store_analysis_result_in_db:
-        __persist_db(writer, args)
+        __persist_db(writer, args, username=user)
 
     if writer.get_analyze_status() == "success":
 
