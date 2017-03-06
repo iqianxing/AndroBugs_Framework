@@ -3713,19 +3713,24 @@ def __persist_db(writer, args, username=None):
 
     # QUICKFIX -- Adaptation to BlueMix #################################
     url = 'mongodb://localhost:27017/db'
-    if os.environ.has_key('VCAP_SERVICES'):
-        vcapJson = json.loads(os.environ['VCAP_SERVICES'])
-        for key, value in vcapJson.iteritems():
-            # Only find the services with the name CHANGE_ME, there should only be one
-            mongoServices = filter(lambda s: s['name'] == 'vulnDB', value)
-            if len(mongoServices) != 0:
-                mongoService = mongoServices[0]
-                if "uri" in mongoService['credentials']:
-                    url = mongoService['credentials']['uri']
-                else:
-                    url = mongoService['credentials']['url']
+    # if os.environ.has_key('VCAP_SERVICES'):
+    #     vcapJson = json.loads(os.environ['VCAP_SERVICES'])
+    #     for key, value in vcapJson.iteritems():
+    #         # Only find the services with the name CHANGE_ME, there should only be one
+    #         mongoServices = filter(lambda s: s['name'] == 'vulnDB', value)
+    #         if len(mongoServices) != 0:
+    #             mongoService = mongoServices[0]
+    #             if "uri" in mongoService['credentials']:
+    #                 url = mongoService['credentials']['uri']
+    #             else:
+    #                 url = mongoService['credentials']['url']
 
     # print(url)
+
+    # Get database connection from environment variable
+    if 'DATABASE_URL' in os.environ:
+        url = os.environ['DATABASE_URL']
+
     client = MongoClient(url)
 
     try:
