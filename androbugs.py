@@ -3905,8 +3905,9 @@ def main(user=None):
         if DEBUG:
             traceback.print_exc()
 
-        # Propagate the exception, it will be handled by the caller of this code.
-        raise
+        # TODO: uncomment to forward exceptions
+        # # Propagate the exception, it will be handled by the caller of this code.
+        # raise
 
     # Save to the DB
     if args.store_analysis_result_in_db:
