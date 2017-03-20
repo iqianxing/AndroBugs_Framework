@@ -3727,11 +3727,14 @@ def __persist_db(writer, args, username=None):
 
     # print(url)
 
+    DB_CERT = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../db_cert.pem'))
+
     # Get database connection from environment variable
     if 'DATABASE_URL' in os.environ:
         url = os.environ['DATABASE_URL']
 
-    client = MongoClient(url)
+    # TODO: don't use certificates when testing database on localhost
+    client = MongoClient(url, connect=False, ssl_ca_certs=DB_CERT)
 
     try:
         db = client['db']  # quickfix static names used as default
