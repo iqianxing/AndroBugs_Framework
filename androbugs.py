@@ -1240,6 +1240,9 @@ def dex_analysis(writer, args, a, dex, int_min_sdk, int_target_sdk):
                 continue
 
             writer.write(url)
+            writer.add_vulnerable_code({
+                'url': url
+            })
 
             try:
                 if dict_class_to_method_mapping:  # Found the corresponding url in the code
@@ -1249,6 +1252,14 @@ def dex_analysis(writer, args, a, dex, int_min_sdk, int_target_sdk):
                                 source_classes_and_functions = (
                                 result_method.get_class_name() + "->" + result_method.get_name() + result_method.get_descriptor())
                                 writer.write("    => " + source_classes_and_functions)
+                                writer.add_vulnerable_code({
+                                    'string': '=> %s->%s%s' % (result_method.get_class_name(),
+                                                               result_method.get_name(),
+                                                               result_method.get_descriptor()),
+                                    'class': result_method.get_class_name(),
+                                    'method': result_method.get_name(),
+                                    'type': result_method.get_descriptor()
+                                })
 
             except KeyError:
                 pass
@@ -1286,6 +1297,14 @@ def dex_analysis(writer, args, a, dex, int_min_sdk, int_target_sdk):
                                "Found some security related method names:")
             for method in list_security_related_methods:
                 writer.write(method.get_class_name() + "->" + method.get_name() + method.get_descriptor())
+                writer.add_vulnerable_code({
+                    'string': '=> %s->%s%s' % (method.get_class_name(),
+                                               method.get_name(),
+                                               method.get_descriptor()),
+                    'class': method.get_class_name(),
+                    'method': method.get_name(),
+                    'type': method.get_descriptor()
+                })
         else:
             writer.startWriter("Security_Methods", LEVEL_INFO, "Security Methods Checking",
                                "Did not detect any method names containing security related strings.")
@@ -1308,6 +1327,10 @@ def dex_analysis(writer, args, a, dex, int_min_sdk, int_target_sdk):
 
             for current_class in list_security_related_classes:
                 writer.write(current_class.get_name())
+                writer.add_vulnerable_code({
+                    'class': current_class.get_name,
+                })
+
         else:
             writer.startWriter("Security_Classes", LEVEL_INFO, "Security Classes Checking",
                                "Did not detect any class names containing security related strings.")
@@ -1461,6 +1484,9 @@ def dex_analysis(writer, args, a, dex, int_min_sdk, int_target_sdk):
 
         for name in permissionNameOfWrongPermissionGroup:
             writer.write("Permission name '%s' sets an empty value in 'permissionGroup' attribute." % (name))
+            writer.add_vulnerable_code({
+                'string': "Permission name '%s' sets an empty value in 'permissionGroup' attribute." % name
+            })
     else:
         writer.startWriter("PERMISSION_GROUP_EMPTY_VALUE", LEVEL_INFO, "AndroidManifest PermissionGroup Checking",
                            "PermissionGroup in permission tag of AndroidManifest.xml is set correctly.")
@@ -1490,6 +1516,9 @@ def dex_analysis(writer, args, a, dex, int_min_sdk, int_target_sdk):
 
             for permission in list_user_permission_critical_manufacturer:
                 writer.write("System use-permission found: \"" + permission + "\"")
+                writer.add_vulnerable_code({
+                    'string': 'System use-permission found: "%s"' % permission
+                })
 
         if list_user_permission_critical:
             writer.startWriter("USE_PERMISSION_CRITICAL", LEVEL_CRITICAL,
@@ -1498,6 +1527,9 @@ def dex_analysis(writer, args, a, dex, int_min_sdk, int_target_sdk):
 
             for permission in list_user_permission_critical:
                 writer.write("Critical use-permission found: \"" + permission + "\"")
+                writer.add_vulnerable_code({
+                    'string': 'Critical use-permission found: "%s"' % permission
+                })
     else:
         writer.startWriter("USE_PERMISSION_SYSTEM_APP", LEVEL_INFO, "AndroidManifest System Use Permission Checking",
                            "No system-level critical use-permission found.")
@@ -1621,6 +1653,14 @@ def dex_analysis(writer, args, a, dex, int_min_sdk, int_target_sdk):
                         source_classes_and_functions = (
                         result_method.get_class_name() + "->" + result_method.get_name() + result_method.get_descriptor())
                         writer.write("    ->From class: " + source_classes_and_functions)
+                        writer.add_vulnerable_code({
+                            'string': '=> %s->%s%s' % (result_method.get_class_name(),
+                                                       result_method.get_name(),
+                                                       result_method.get_descriptor()),
+                            'class': result_method.get_class_name(),
+                            'method': result_method.get_name(),
+                            'type': result_method.get_descriptor()
+                        })
 
             if "http://" in decoded_string:
                 list_base64_decoded_urls[decoded_string] = original_string
@@ -1649,6 +1689,14 @@ def dex_analysis(writer, args, a, dex, int_min_sdk, int_target_sdk):
                             source_classes_and_functions = (
                             result_method.get_class_name() + "->" + result_method.get_name() + result_method.get_descriptor())
                             writer.write("    ->From class: " + source_classes_and_functions)
+                            writer.add_vulnerable_code({
+                                'string': '=> %s->%s%s' % (result_method.get_class_name(),
+                                                           result_method.get_name(),
+                                                           result_method.get_descriptor()),
+                                'class': result_method.get_class_name(),
+                                'method': result_method.get_name(),
+                                'type': result_method.get_descriptor()
+                            })
 
     else:
         writer.startWriter("HACKER_BASE64_STRING_DECODE", LEVEL_INFO, "Base64 String Encryption",
@@ -1773,12 +1821,18 @@ def dex_analysis(writer, args, a, dex, int_min_sdk, int_target_sdk):
                                "BKS Keystore files:", ["KeyStore", "Hacker"])
             for i in list_keystore_file_name:
                 writer.write(i)
+                writer.add_vulnerable_code({
+                    'string': i
+                })
 
         if list_possible_keystore_file_name:
             writer.startWriter("HACKER_KEYSTORE_LOCATION2", LEVEL_NOTICE, "Possible KeyStore File Location",
                                "BKS possible keystore files:", ["KeyStore", "Hacker"])
             for i in list_possible_keystore_file_name:
                 writer.write(i)
+                writer.add_vulnerable_code({
+                    'string': i
+                })
     else:
         writer.startWriter("HACKER_KEYSTORE_LOCATION1", LEVEL_INFO, "KeyStore File Location",
                            "Did not find any possible BKS keystores or certificate keystore files (Notice: It does not mean this app does not use keysotre).",
@@ -2000,6 +2054,14 @@ def dex_analysis(writer, args, a, dex, int_min_sdk, int_target_sdk):
 
         for method in list_HOSTNAME_INNER_VERIFIER:
             writer.write(method.easy_print())
+            writer.add_vulnerable_code({
+                'string': '=> %s->%s%s' % (method.get_class_name(),
+                                           method.get_name(),
+                                           method.get_descriptor()),
+                'class': method.get_class_name(),
+                'method': method.get_name(),
+                'type': method.get_descriptor()
+            })
 
             # because one class may initialize by many new instances of it
             method_class_name = method.get_class_name()
@@ -2157,6 +2219,14 @@ def dex_analysis(writer, args, a, dex, int_min_sdk, int_target_sdk):
 
         for method in list_webviewClient:
             writer.write(method.easy_print())
+            writer.add_vulnerable_code({
+                'string': '=> %s->%s%s' % (method.get_class_name(),
+                                           method.get_name(),
+                                           method.get_descriptor()),
+                'class': method.get_class_name(),
+                'method': method.get_name(),
+                'type': method.get_descriptor()
+            })
 
             # because one class may initialize by many new instances of it
             method_class_name = method.get_class_name()
@@ -2483,6 +2553,14 @@ def dex_analysis(writer, args, a, dex, int_min_sdk, int_target_sdk):
                 writer.write("   ->Methods:")
                 for method in method_names:
                     writer.write("        %s%s" % (method.get_name(), method.get_descriptor()))
+                    writer.add_vulnerable_code({
+                        'string': '=> %s->%s%s' % (class_name,
+                                                   method.get_name(),
+                                                   method.get_descriptor()),
+                        'class': class_name,
+                        'method': method.get_name(),
+                        'type': method.get_descriptor()
+                    })
 
     else:
         if args.extra == 2:  # The output may be too verbose, so make it an option
@@ -2638,29 +2716,54 @@ def dex_analysis(writer, args, a, dex, int_min_sdk, int_target_sdk):
                     "You MUST override 'isValidFragment' method in every \"PreferenceActivity\" class to avoid Exception throwing in Android 4.4:")
                 for i in list_Fragment_vulnerability_NonMethod_classes:  # Notice: Each element in the list is NOT method, but String
                     writer.write("    " + i)
+                    writer.add_vulnerable_code({
+                        'string': i
+                    })
             else:
                 # You must override. Otherwise, it always throws Exception
                 writer.write(
                     "These \"PreferenceActivity\" classes may be vulnerable because they do not override 'isValidFragment' method (If you do not load any fragment in the PreferenceActivity, please still override 'isValidFragment' method and only return \"false\" to secure your app in the future changes):")
                 for i in list_Fragment_vulnerability_NonMethod_classes:  # Notice: Each element in the list is NOT method, but String
                     writer.write("    " + i)
+                    writer.add_vulnerable_code({
+                        'string': i
+                    })
 
         if list_Fragment_vulnerability_Method_OnlyReturnTrue_methods:
             writer.write(
                 "You override 'isValidFragment' and only return \"true\" in those classes. You should use \"if\" condition to check whether the fragment is valid (Example code: http://stackoverflow.com/questions/19973034/isvalidfragment-android-api-19/20139823#20139823):")
             for method in list_Fragment_vulnerability_Method_OnlyReturnTrue_methods:
                 writer.write("    " + method.easy_print())
+                writer.add_vulnerable_code({
+                    'string': '=> %s->%s%s' % (method.get_class_name(),
+                                               method.get_name(),
+                                               method.get_descriptor()),
+                    'class': method.get_class_name(),
+                    'method': method.get_name(),
+                    'type': method.get_descriptor()
+                })
 
         if list_Fragment_vulnerability_Method_NoIfOrSwitch_methods:
             writer.write(
                 "Please make sure you check the valid fragment inside the overridden 'isValidFragment' method:")
             for method in list_Fragment_vulnerability_Method_NoIfOrSwitch_methods:
                 writer.write("    " + method.easy_print())
+                writer.add_vulnerable_code({
+                    'string': '=> %s->%s%s' % (method.get_class_name(),
+                                               method.get_name(),
+                                               method.get_descriptor()),
+                    'class': method.get_class_name(),
+                    'method': method.get_name(),
+                    'type': method.get_descriptor()
+                })
 
         if list_Fragment:
             writer.write("All the potential vulnerable \"fragment\":")
             for i in list_Fragment:
                 writer.write("    " + i)
+                writer.add_vulnerable_code({
+                    'string': i
+                })
 
     else:
         writer.startWriter("FRAGMENT_INJECTION", LEVEL_INFO, "Fragment Vulnerability Checking",
@@ -3213,6 +3316,14 @@ def dex_analysis(writer, args, a, dex, int_min_sdk, int_target_sdk):
 
         for found_string, method in result_sqlite_encryption:
             writer.write(method.get_class_name() + "->" + method.get_name() + method.get_descriptor())
+            writer.add_vulnerable_code({
+                'string': '=> %s->%s%s' % (method.get_class_name(),
+                                           method.get_name(),
+                                           method.get_descriptor()),
+                'class': method.get_class_name(),
+                'method': method.get_name(),
+                'type': method.get_descriptor()
+            })
     else:
         writer.startWriter("HACKER_DB_KEY", LEVEL_INFO, "Key for Android SQLite Databases Encryption",
                            "Did not find usages of the symmetric key (PRAGMA key) to encrypt the SQLite databases (It's still possible there are usages but we did not find out).",
@@ -3256,10 +3367,17 @@ def dex_analysis(writer, args, a, dex, int_min_sdk, int_target_sdk):
 
         for found_string, method, show_string in lst_ordered_finding:
             if show_string:
-                writer.write(
-                    method.get_class_name() + "->" + method.get_name() + method.get_descriptor() + "  => " + found_string)
+                writer.write(method.get_class_name() + "->" + method.get_name() + method.get_descriptor() + "  => " + found_string)
             else:
                 writer.write(method.get_class_name() + "->" + method.get_name() + method.get_descriptor())
+            writer.add_vulnerable_code({
+                'string': '=> %s->%s%s' % (method.get_class_name(),
+                                           method.get_name(),
+                                           method.get_descriptor()),
+                'class': method.get_class_name(),
+                'method': method.get_name(),
+                'type': method.get_descriptor()
+            })
     else:
 
         writer.startWriter("COMMAND_MAYBE_SYSTEM", LEVEL_INFO, "Executing \"root\" or System Privilege Checking",
@@ -3481,6 +3599,9 @@ def dex_analysis(writer, args, a, dex, int_min_sdk, int_target_sdk):
                """, ["WebView"])
         for i in path_setAllowFileAccess_confirm_vulnerable_src_class_func:
             writer.write(i)
+            writer.add_vulnerable_code({
+                'string': i
+            })
 
     else:
         writer.startWriter("WEBVIEW_ALLOW_FILE_ACCESS", LEVEL_INFO, "WebView Local File Access Attacks Checking",
