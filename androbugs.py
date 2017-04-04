@@ -164,6 +164,10 @@ ENABLE_EXCLUDE_CLASSES = True
 class Writer:
 
     def __init__(self):
+
+        # List containing the names of the vulnerable classes/methods.
+        self.vulnerable_code = []
+
         self.__package_information = {}
         self.__cache_output_detail_stream = []
         self.__output_dict_vector_result_information = {}  # Store the result information (key: tag ; value: information_for_each_vector)
@@ -185,20 +189,32 @@ class Writer:
         cm = vm.get_class_manager()
 
         if isinstance(path, analysis.PathVar):
-            dst_class_name, dst_method_name, dst_descriptor =  path.get_dst( cm )
+            dst_class_name, dst_method_name, dst_descriptor = path.get_dst(cm)
             info_var = path.get_var_info()
 
             self.write("=> %s (0x%x) ---> %s->%s%s" % (info_var,
-                                                    path.get_idx(),
-                                                    dst_class_name,
-                                                    dst_method_name,
-                                                    dst_descriptor),
-                indention_space_count)
+                                                       path.get_idx(),
+                                                       dst_class_name,
+                                                       dst_method_name,
+                                                       dst_descriptor), indention_space_count)
+
+            self.add_vulnerable_code({
+                'string': '=> %s (0x%x) ---> %s->%s%s' % (info_var,
+                                                          path.get_idx(),
+                                                          dst_class_name,
+                                                          dst_method_name,
+                                                          dst_descriptor),
+                'info_var': info_var,
+                'index': path.get_idx(),
+                'dst_class': dst_class_name,
+                'dst_method': dst_method_name,
+                'dst_type': dst_descriptor
+            })
 
         else:
             if path.get_access_flag() == analysis.TAINTED_PACKAGE_CALL:
-                src_class_name, src_method_name, src_descriptor =  path.get_src( cm )
-                dst_class_name, dst_method_name, dst_descriptor =  path.get_dst( cm )
+                src_class_name, src_method_name, src_descriptor = path.get_src(cm)
+                dst_class_name, dst_method_name, dst_descriptor = path.get_dst(cm)
 
                 # TODO: remove html, this is used only for a test
                 self.write('<li>{0} -> {1}{2} ---> {3} -> {4}{5}</li>'.format(
@@ -215,19 +231,52 @@ class Writer:
                 # 												dst_descriptor),
                 # 	indention_space_count)
 
+                self.add_vulnerable_code({
+                    'string': '=> %s->%s%s (0x%x) ---> %s->%s%s' % (src_class_name,
+                                                                    src_method_name,
+                                                                    src_descriptor,
+                                                                    path.get_idx(),
+                                                                    dst_class_name,
+                                                                    dst_method_name,
+                                                                    dst_descriptor),
+                    'src_class': src_class_name,
+                    'src_method': src_method_name,
+                    'src_type': src_descriptor,
+                    'index': path.get_idx(),
+                    'dst_class': dst_class_name,
+                    'dst_method': dst_method_name,
+                    'dst_type': dst_descriptor
+                })
+
             else:
                 src_class_name, src_method_name, src_descriptor =  path.get_src( cm )
 
                 self.write("=> %s->%s%s (0x%x)" % (src_class_name,
-                                                src_method_name,
-                                                src_descriptor,
-                                                path.get_idx()),
-                    indention_space_count)
+                                                   src_method_name,
+                                                   src_descriptor,
+                                                   path.get_idx()), indention_space_count)
+
+                self.add_vulnerable_code({
+                    'string': '=> %s->%s%s (0x%x)' % (src_class_name,
+                                                      src_method_name,
+                                                      src_descriptor,
+                                                      path.get_idx()),
+                    'src_class': src_class_name,
+                    'src_method': src_method_name,
+                    'src_type': src_descriptor,
+                    'index': path.get_idx()
+                })
 
     def show_Path_only_source(self, vm, path, indention_space_count=0):
         cm = vm.get_class_manager()
-        src_class_name, src_method_name, src_descriptor =  path.get_src( cm )
+        src_class_name, src_method_name, src_descriptor = path.get_src(cm)
         self.write("=> %s->%s%s" % (src_class_name, src_method_name, src_descriptor), indention_space_count)
+        self.add_vulnerable_code({
+            'string': '=> %s->%s%s' % (src_class_name, src_method_name, src_descriptor),
+            'src_class': src_class_name,
+            'src_method': src_method_name,
+            'src_type': src_descriptor
+        })
 
     def show_Paths(self, vm, paths, indention_space_count=0):
         """
@@ -253,7 +302,13 @@ class Writer:
         m_idx = path[1]
         method = vm.get_cm_method(m_idx)
 
-        self.write("=> %s->%s %s" % (method[0], method[1], method[2][0] + method[2][1]),	indention_space_count)
+        self.write("=> %s->%s %s" % (method[0], method[1], method[2][0] + method[2][1]), indention_space_count)
+        self.add_vulnerable_code({
+            'string': '=> %s->%s %s' % (method[0], method[1], method[2][0] + method[2][1]),
+            'class': method[0],
+            'method': method[1],
+            'type': method[2][0] + method[2][1]
+        })
 
     #Output: stoping
 
@@ -309,6 +364,10 @@ class Writer:
 
     def write(self, detail_msg, indention_space_count=0):
         self.__cache_output_detail_stream.append(detail_msg + "\n")
+        self.vulnerable_code.append(detail_msg)
+
+    def add_vulnerable_code(self, code):
+        self.vulnerable_code.append(code)
 
     def get_packed_analyzed_results_for_mongodb(self):
         # For external storage
@@ -412,7 +471,7 @@ class Writer:
             current_tag = self.__output_current_tag
             # try:
             if current_tag in self.__output_dict_vector_result_information:
-                self.__output_dict_vector_result_information[current_tag]["count"] += len(self.__cache_output_detail_stream)
+                self.__output_dict_vector_result_information[current_tag]["count"] += len(self.vulnerable_code)
 
                 """
                     Use xxx.encode('string_escape') to avoid translating user code into command
@@ -443,6 +502,12 @@ class Writer:
                 self.__output_dict_vector_result_information[current_tag]["vector_details"] += \
                     self.get_valid_encoding_utf8_string(output_string.rstrip(str('\n').encode('string_escape')))
 
+                # Add the list with vulnerable code to the final list of the vulnerability
+                if 'vulnerable_code' not in self.__output_dict_vector_result_information[current_tag].keys():
+                    self.__output_dict_vector_result_information[current_tag]['vulnerable_code'] = []
+
+                self.__output_dict_vector_result_information[current_tag]['vulnerable_code'].extend(self.vulnerable_code)
+
                 try:
                     self.__output_dict_vector_result_information[current_tag]["title"] = self.get_valid_encoding_utf8_string(self.__output_dict_vector_result_information[current_tag]["title"])
                 except KeyError:
@@ -452,6 +517,10 @@ class Writer:
 
         self.__output_current_tag = ""
         self.__cache_output_detail_stream[:] = []  # Clear the items in the list
+
+        # Clear the list of vulnerable code without affecting existing references to this list
+        # (every vulnerability could have its own list of vulnerable code)
+        self.vulnerable_code = []
 
     def is_dict_information_has_cve_number(self, dict_information):
         if dict_information:
