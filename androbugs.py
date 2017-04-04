@@ -364,7 +364,6 @@ class Writer:
 
     def write(self, detail_msg, indention_space_count=0):
         self.__cache_output_detail_stream.append(detail_msg + "\n")
-        self.vulnerable_code.append(detail_msg)
 
     def add_vulnerable_code(self, code):
         self.vulnerable_code.append(code)
