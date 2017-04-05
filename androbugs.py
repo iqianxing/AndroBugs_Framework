@@ -199,16 +199,14 @@ class Writer:
                                                        dst_descriptor), indention_space_count)
 
             self.add_vulnerable_code({
-                'string': '=> %s (0x%x) ---> %s->%s%s' % (info_var,
-                                                          path.get_idx(),
-                                                          dst_class_name,
-                                                          dst_method_name,
-                                                          dst_descriptor),
-                'info_var': info_var,
-                'index': path.get_idx(),
-                'dst_class': dst_class_name,
-                'dst_method': dst_method_name,
-                'dst_type': dst_descriptor
+                'string': '%s ---> %s->%s%s' % (info_var,
+                                                dst_class_name,
+                                                dst_method_name,
+                                                dst_descriptor),
+                'api_class': dst_class_name,
+                'api_method': dst_method_name,
+                'api_type': dst_descriptor,
+                'id': '%s->%s%s' % (dst_class_name, dst_method_name, dst_descriptor)
             })
 
         else:
@@ -222,34 +220,24 @@ class Writer:
                     dst_class_name, dst_method_name, dst_descriptor
                 ))
 
-                # self.write("=> %s->%s%s (0x%x) ---> %s->%s%s" % (src_class_name,
-                # 												src_method_name,
-                # 												src_descriptor,
-                # 												path.get_idx(),
-                # 												dst_class_name,
-                # 												dst_method_name,
-                # 												dst_descriptor),
-                # 	indention_space_count)
-
                 self.add_vulnerable_code({
-                    'string': '=> %s->%s%s (0x%x) ---> %s->%s%s' % (src_class_name,
-                                                                    src_method_name,
-                                                                    src_descriptor,
-                                                                    path.get_idx(),
-                                                                    dst_class_name,
-                                                                    dst_method_name,
-                                                                    dst_descriptor),
-                    'src_class': src_class_name,
-                    'src_method': src_method_name,
-                    'src_type': src_descriptor,
-                    'index': path.get_idx(),
-                    'dst_class': dst_class_name,
-                    'dst_method': dst_method_name,
-                    'dst_type': dst_descriptor
+                    'string': '%s->%s%s ---> %s->%s%s' % (src_class_name,
+                                                          src_method_name,
+                                                          src_descriptor,
+                                                          dst_class_name,
+                                                          dst_method_name,
+                                                          dst_descriptor),
+                    'class': src_class_name,
+                    'method': src_method_name,
+                    'type': src_descriptor,
+                    'api_class': dst_class_name,
+                    'api_method': dst_method_name,
+                    'api_type': dst_descriptor,
+                    'id': '%s->%s%s' % (dst_class_name, dst_method_name, dst_descriptor)
                 })
 
             else:
-                src_class_name, src_method_name, src_descriptor =  path.get_src( cm )
+                src_class_name, src_method_name, src_descriptor = path.get_src(cm)
 
                 self.write("=> %s->%s%s (0x%x)" % (src_class_name,
                                                    src_method_name,
@@ -257,14 +245,12 @@ class Writer:
                                                    path.get_idx()), indention_space_count)
 
                 self.add_vulnerable_code({
-                    'string': '=> %s->%s%s (0x%x)' % (src_class_name,
-                                                      src_method_name,
-                                                      src_descriptor,
-                                                      path.get_idx()),
-                    'src_class': src_class_name,
-                    'src_method': src_method_name,
-                    'src_type': src_descriptor,
-                    'index': path.get_idx()
+                    'string': '%s->%s%s' % (src_class_name,
+                                            src_method_name,
+                                            src_descriptor),
+                    'class': src_class_name,
+                    'method': src_method_name,
+                    'type': src_descriptor
                 })
 
     def show_Path_only_source(self, vm, path, indention_space_count=0):
@@ -272,10 +258,10 @@ class Writer:
         src_class_name, src_method_name, src_descriptor = path.get_src(cm)
         self.write("=> %s->%s%s" % (src_class_name, src_method_name, src_descriptor), indention_space_count)
         self.add_vulnerable_code({
-            'string': '=> %s->%s%s' % (src_class_name, src_method_name, src_descriptor),
-            'src_class': src_class_name,
-            'src_method': src_method_name,
-            'src_type': src_descriptor
+            'string': '%s->%s%s' % (src_class_name, src_method_name, src_descriptor),
+            'class': src_class_name,
+            'method': src_method_name,
+            'type': src_descriptor
         })
 
     def show_Paths(self, vm, paths, indention_space_count=0):
@@ -304,7 +290,7 @@ class Writer:
 
         self.write("=> %s->%s %s" % (method[0], method[1], method[2][0] + method[2][1]), indention_space_count)
         self.add_vulnerable_code({
-            'string': '=> %s->%s %s' % (method[0], method[1], method[2][0] + method[2][1]),
+            'string': '%s->%s %s' % (method[0], method[1], method[2][0] + method[2][1]),
             'class': method[0],
             'method': method[1],
             'type': method[2][0] + method[2][1]
@@ -1240,27 +1226,30 @@ def dex_analysis(writer, args, a, dex, int_min_sdk, int_target_sdk):
                 continue
 
             writer.write(url)
-            writer.add_vulnerable_code({
-                'url': url
-            })
+
+            url_to_add = {
+                'url': url,
+                'id': url
+            }
 
             try:
-                if dict_class_to_method_mapping:  # Found the corresponding url in the code
+                if dict_class_to_method_mapping:  # Find the corresponding url in the code
                     for _, result_method_list in dict_class_to_method_mapping.items():
                         for result_method in result_method_list:  # strip duplicated item
                             if filteringEngine.is_class_name_not_in_exclusion(result_method.get_class_name()):
                                 source_classes_and_functions = (
                                 result_method.get_class_name() + "->" + result_method.get_name() + result_method.get_descriptor())
                                 writer.write("    => " + source_classes_and_functions)
-                                writer.add_vulnerable_code({
-                                    'string': '=> %s->%s%s' % (result_method.get_class_name(),
-                                                               result_method.get_name(),
-                                                               result_method.get_descriptor()),
-                                    'class': result_method.get_class_name(),
-                                    'method': result_method.get_name(),
-                                    'type': result_method.get_descriptor()
-                                })
+                                url_to_add['string'] = '%s->%s%s' % (result_method.get_class_name(),
+                                                                     result_method.get_name(),
+                                                                     result_method.get_descriptor())
+                                url_to_add['class'] = result_method.get_class_name()
+                                url_to_add['method'] = result_method.get_name()
+                                url_to_add['type'] = result_method.get_descriptor()
 
+                            writer.add_vulnerable_code(url_to_add)
+                else:
+                    writer.add_vulnerable_code(url_to_add)
             except KeyError:
                 pass
 
@@ -1298,9 +1287,9 @@ def dex_analysis(writer, args, a, dex, int_min_sdk, int_target_sdk):
             for method in list_security_related_methods:
                 writer.write(method.get_class_name() + "->" + method.get_name() + method.get_descriptor())
                 writer.add_vulnerable_code({
-                    'string': '=> %s->%s%s' % (method.get_class_name(),
-                                               method.get_name(),
-                                               method.get_descriptor()),
+                    'string': '%s->%s%s' % (method.get_class_name(),
+                                            method.get_name(),
+                                            method.get_descriptor()),
                     'class': method.get_class_name(),
                     'method': method.get_name(),
                     'type': method.get_descriptor()
@@ -1328,7 +1317,7 @@ def dex_analysis(writer, args, a, dex, int_min_sdk, int_target_sdk):
             for current_class in list_security_related_classes:
                 writer.write(current_class.get_name())
                 writer.add_vulnerable_code({
-                    'class': current_class.get_name,
+                    'string': current_class.get_name,
                 })
 
         else:
@@ -1517,7 +1506,7 @@ def dex_analysis(writer, args, a, dex, int_min_sdk, int_target_sdk):
             for permission in list_user_permission_critical_manufacturer:
                 writer.write("System use-permission found: \"" + permission + "\"")
                 writer.add_vulnerable_code({
-                    'string': 'System use-permission found: "%s"' % permission
+                    'string': "System use-permission found: '%s'" % permission
                 })
 
         if list_user_permission_critical:
@@ -1528,7 +1517,7 @@ def dex_analysis(writer, args, a, dex, int_min_sdk, int_target_sdk):
             for permission in list_user_permission_critical:
                 writer.write("Critical use-permission found: \"" + permission + "\"")
                 writer.add_vulnerable_code({
-                    'string': 'Critical use-permission found: "%s"' % permission
+                    'string': "Critical use-permission found: '%s'" % permission
                 })
     else:
         writer.startWriter("USE_PERMISSION_SYSTEM_APP", LEVEL_INFO, "AndroidManifest System Use Permission Checking",
@@ -1654,9 +1643,9 @@ def dex_analysis(writer, args, a, dex, int_min_sdk, int_target_sdk):
                         result_method.get_class_name() + "->" + result_method.get_name() + result_method.get_descriptor())
                         writer.write("    ->From class: " + source_classes_and_functions)
                         writer.add_vulnerable_code({
-                            'string': '=> %s->%s%s' % (result_method.get_class_name(),
-                                                       result_method.get_name(),
-                                                       result_method.get_descriptor()),
+                            'string': "Original string: '%s' Decoded string: '%s' in %s->%s%s" %
+                                      (original_string, decoded_string, result_method.get_class_name(),
+                                       result_method.get_name(), result_method.get_descriptor()),
                             'class': result_method.get_class_name(),
                             'method': result_method.get_name(),
                             'type': result_method.get_descriptor()
@@ -1690,9 +1679,9 @@ def dex_analysis(writer, args, a, dex, int_min_sdk, int_target_sdk):
                             result_method.get_class_name() + "->" + result_method.get_name() + result_method.get_descriptor())
                             writer.write("    ->From class: " + source_classes_and_functions)
                             writer.add_vulnerable_code({
-                                'string': '=> %s->%s%s' % (result_method.get_class_name(),
-                                                           result_method.get_name(),
-                                                           result_method.get_descriptor()),
+                                'string': "Original string: '%s' Decoded string: '%s' in %s->%s%s" %
+                                          (original_string, decoded_string, result_method.get_class_name(),
+                                           result_method.get_name(), result_method.get_descriptor()),
                                 'class': result_method.get_class_name(),
                                 'method': result_method.get_name(),
                                 'type': result_method.get_descriptor()
@@ -2055,9 +2044,9 @@ def dex_analysis(writer, args, a, dex, int_min_sdk, int_target_sdk):
         for method in list_HOSTNAME_INNER_VERIFIER:
             writer.write(method.easy_print())
             writer.add_vulnerable_code({
-                'string': '=> %s->%s%s' % (method.get_class_name(),
-                                           method.get_name(),
-                                           method.get_descriptor()),
+                'string': '%s->%s%s' % (method.get_class_name(),
+                                        method.get_name(),
+                                        method.get_descriptor()),
                 'class': method.get_class_name(),
                 'method': method.get_name(),
                 'type': method.get_descriptor()
@@ -2220,9 +2209,9 @@ def dex_analysis(writer, args, a, dex, int_min_sdk, int_target_sdk):
         for method in list_webviewClient:
             writer.write(method.easy_print())
             writer.add_vulnerable_code({
-                'string': '=> %s->%s%s' % (method.get_class_name(),
-                                           method.get_name(),
-                                           method.get_descriptor()),
+                'string': '%s->%s%s' % (method.get_class_name(),
+                                        method.get_name(),
+                                        method.get_descriptor()),
                 'class': method.get_class_name(),
                 'method': method.get_name(),
                 'type': method.get_descriptor()
@@ -2546,17 +2535,16 @@ def dex_analysis(writer, args, a, dex, int_min_sdk, int_target_sdk):
 
             for class_name, method_names in dic_native_methods_sorted.items():
                 if class_name in dic_NDK_library_classname_to_ndkso_mapping:
-                    writer.write("Class: %s (Loaded NDK files: %s)" % (
-                    class_name, dic_NDK_library_classname_to_ndkso_mapping[class_name]))
+                    writer.write("Class: %s (Loaded NDK files: %s)" % (class_name, dic_NDK_library_classname_to_ndkso_mapping[class_name]))
                 else:
                     writer.write("Class: %s" % (class_name))
                 writer.write("   ->Methods:")
                 for method in method_names:
                     writer.write("        %s%s" % (method.get_name(), method.get_descriptor()))
                     writer.add_vulnerable_code({
-                        'string': '=> %s->%s%s' % (class_name,
-                                                   method.get_name(),
-                                                   method.get_descriptor()),
+                        'string': '%s->%s%s' % (class_name,
+                                                method.get_name(),
+                                                method.get_descriptor()),
                         'class': class_name,
                         'method': method.get_name(),
                         'type': method.get_descriptor()
@@ -2735,9 +2723,9 @@ def dex_analysis(writer, args, a, dex, int_min_sdk, int_target_sdk):
             for method in list_Fragment_vulnerability_Method_OnlyReturnTrue_methods:
                 writer.write("    " + method.easy_print())
                 writer.add_vulnerable_code({
-                    'string': '=> %s->%s%s' % (method.get_class_name(),
-                                               method.get_name(),
-                                               method.get_descriptor()),
+                    'string': '%s->%s%s' % (method.get_class_name(),
+                                            method.get_name(),
+                                            method.get_descriptor()),
                     'class': method.get_class_name(),
                     'method': method.get_name(),
                     'type': method.get_descriptor()
@@ -2749,9 +2737,9 @@ def dex_analysis(writer, args, a, dex, int_min_sdk, int_target_sdk):
             for method in list_Fragment_vulnerability_Method_NoIfOrSwitch_methods:
                 writer.write("    " + method.easy_print())
                 writer.add_vulnerable_code({
-                    'string': '=> %s->%s%s' % (method.get_class_name(),
-                                               method.get_name(),
-                                               method.get_descriptor()),
+                    'string': '%s->%s%s' % (method.get_class_name(),
+                                            method.get_name(),
+                                            method.get_descriptor()),
                     'class': method.get_class_name(),
                     'method': method.get_name(),
                     'type': method.get_descriptor()
@@ -2802,6 +2790,9 @@ def dex_analysis(writer, args, a, dex, int_min_sdk, int_target_sdk):
                 for key, valuelist in who_use_this_permission.items():
                     for list_item in valuelist:
                         writer.write("    -> used by (" + key + ") " + a.format_value(list_item))
+                        writer.add_vulnerable_code({
+                            'string': '%s used by (%s) %s' % (class_name, key, a.format_value(list_item))
+                        })
     else:
         writer.startWriter("PERMISSION_DANGEROUS", LEVEL_INFO,
                            "AndroidManifest Dangerous ProtectionLevel of Permission Checking",
@@ -2827,6 +2818,9 @@ def dex_analysis(writer, args, a, dex, int_min_sdk, int_target_sdk):
                 for key, valuelist in who_use_this_permission.items():
                     for list_item in valuelist:
                         writer.write("    -> used by (" + key + ") " + a.format_value(list_item))
+                        writer.add_vulnerable_code({
+                            'string': '%s used by (%s) %s' % (class_name, key, a.format_value(list_item))
+                        })
     else:
         writer.startWriter("PERMISSION_NORMAL", LEVEL_INFO,
                            "AndroidManifest Normal ProtectionLevel of Permission Checking",
@@ -2855,6 +2849,9 @@ def dex_analysis(writer, args, a, dex, int_min_sdk, int_target_sdk):
 
         for tag, name in list_lost_exported_components:
             writer.write(("%10s => %s") % (tag, a.format_value(name)))
+            writer.add_vulnerable_code({
+                'string': '%s in %s' % (tag, a.format_value(name))
+            })
 
     else:
         writer.startWriter("PERMISSION_NO_PREFIX_EXPORTED", LEVEL_INFO, "AndroidManifest Exported Lost Prefix Checking",
@@ -3047,6 +3044,9 @@ def dex_analysis(writer, args, a, dex, int_min_sdk, int_target_sdk):
 
             for i in list_alerting_exposing_components_NonGoogle:
                 writer.write(("%10s => %s") % (i[0], i[1]))
+                writer.add_vulnerable_code({
+                    'string': '%s in %s' % (i[0], i[1])
+                })
 
         if list_alerting_exposing_components_Google:
             writer.startWriter("PERMISSION_EXPORTED_GOOGLE", LEVEL_NOTICE,
@@ -3055,6 +3055,9 @@ def dex_analysis(writer, args, a, dex, int_min_sdk, int_target_sdk):
 
             for i in list_alerting_exposing_components_Google:
                 writer.write(("%10s => %s") % (i[0], i[1]))
+                writer.add_vulnerable_code({
+                    'string': '%s in %s' % (i[0], i[1])
+                })
     else:
         writer.startWriter("PERMISSION_EXPORTED", LEVEL_INFO, "AndroidManifest Exported Components Checking",
                            "No exported components (except for Launcher) for receiving Android or outside applications' actions (AndroidManifest.xml).")
@@ -3138,6 +3141,9 @@ def dex_analysis(writer, args, a, dex, int_min_sdk, int_target_sdk):
 
             for i in list_alerting_exposing_providers_no_exported_setting:
                 writer.write(("%10s => %s") % ("provider", i[0]))
+                writer.add_vulnerable_code({
+                    'string': '%s in %s' % ("provider", i[0])
+                })
 
         if list_alerting_exposing_providers:  # provider with "true" exported and not enough permission protected on it
 
@@ -3149,6 +3155,9 @@ def dex_analysis(writer, args, a, dex, int_min_sdk, int_target_sdk):
                  2. http://blog.trustlook.com/2013/10/23/ebay-android-content-provider-information-disclosure-vulnerability/""")
             for i in list_alerting_exposing_providers:
                 writer.write(("%10s => %s") % ("provider", i[0]))
+                writer.add_vulnerable_code({
+                    'string': '%s in %s' % ("provider", i[0])
+                })
 
     else:
         writer.startWriter("PERMISSION_PROVIDER_IMPLICIT_EXPORTED", LEVEL_INFO,
@@ -3200,6 +3209,9 @@ def dex_analysis(writer, args, a, dex, int_min_sdk, int_target_sdk):
                """)
             for tag, name in list_wrong_intent_filter_settings:
                 writer.write(("%10s => %s") % (tag, a.format_value(name)))
+                writer.add_vulnerable_code({
+                    'string': '%s in %s' % (tag, a.format_value(name))
+                })
 
         if list_no_actions_in_intent_filter:
             writer.startWriter("PERMISSION_INTENT_FILTER_MISCONFIG", LEVEL_CRITICAL,
@@ -3209,6 +3221,9 @@ def dex_analysis(writer, args, a, dex, int_min_sdk, int_target_sdk):
                """)
             for tag, name in list_no_actions_in_intent_filter:
                 writer.write(("%10s => %s") % (tag, a.format_value(name)))
+                writer.add_vulnerable_code({
+                    'string': '%s in %s' % (tag, a.format_value(name))
+                })
     else:
         writer.startWriter("PERMISSION_INTENT_FILTER_MISCONFIG", LEVEL_INFO,
                            "AndroidManifest \"intent-filter\" Settings Checking",
@@ -3225,6 +3240,9 @@ def dex_analysis(writer, args, a, dex, int_min_sdk, int_target_sdk):
 
         for name in list_implicit_service_components:
             writer.write(("=> %s") % (a.format_value(name)))
+            writer.add_vulnerable_code({
+                'string': '%s' % a.format_value(name)
+            })
 
     else:
         writer.startWriter("PERMISSION_IMPLICIT_SERVICE", LEVEL_INFO, "Implicit Service Checking",
@@ -3270,8 +3288,7 @@ def dex_analysis(writer, args, a, dex, int_min_sdk, int_target_sdk):
                     has_version2 = True
 
             if has_version1or0:
-                writer.write(
-                    "It's using \"SQLCipher for Android\" (Library version: 1.X or 0.X), package name: \"info.guardianproject.database\"")
+                writer.write("It's using \"SQLCipher for Android\" (Library version: 1.X or 0.X), package name: \"info.guardianproject.database\"")
             if has_version2:
                 writer.write(
                     "It's using \"SQLCipher for Android\" (Library version: 2.X or higher), package name: \"net.sqlcipher.database\"")
@@ -3317,9 +3334,9 @@ def dex_analysis(writer, args, a, dex, int_min_sdk, int_target_sdk):
         for found_string, method in result_sqlite_encryption:
             writer.write(method.get_class_name() + "->" + method.get_name() + method.get_descriptor())
             writer.add_vulnerable_code({
-                'string': '=> %s->%s%s' % (method.get_class_name(),
-                                           method.get_name(),
-                                           method.get_descriptor()),
+                'string': '%s->%s%s' % (method.get_class_name(),
+                                        method.get_name(),
+                                        method.get_descriptor()),
                 'class': method.get_class_name(),
                 'method': method.get_name(),
                 'type': method.get_descriptor()
@@ -3371,9 +3388,9 @@ def dex_analysis(writer, args, a, dex, int_min_sdk, int_target_sdk):
             else:
                 writer.write(method.get_class_name() + "->" + method.get_name() + method.get_descriptor())
             writer.add_vulnerable_code({
-                'string': '=> %s->%s%s' % (method.get_class_name(),
-                                           method.get_name(),
-                                           method.get_descriptor()),
+                'string': '%s->%s%s' % (method.get_class_name(),
+                                        method.get_name(),
+                                        method.get_descriptor()),
                 'class': method.get_class_name(),
                 'method': method.get_name(),
                 'type': method.get_descriptor()
@@ -3687,20 +3704,43 @@ def dex_analysis(writer, args, a, dex, int_min_sdk, int_target_sdk):
             writer.write("[Confirm Vulnerable]")
             for name in list_X509Certificate_Critical_class:
                 writer.write("=> " + name)
+                to_add = {
+                    'cert': name,
+                    'id': name
+                }
                 if name in dict_X509Certificate_class_name_to_caller_mapping:
                     for used_method in dict_X509Certificate_class_name_to_caller_mapping[name]:
-                        writer.write(
-                            "      -> used by: " + used_method.get_class_name() + "->" + used_method.get_name() + used_method.get_descriptor())
+                        writer.write("      -> used by: " + used_method.get_class_name() + "->" + used_method.get_name() + used_method.get_descriptor())
+                        to_add['string'] = '%s->%s%s' % (used_method.get_class_name(),
+                                                         used_method.get_name(),
+                                                         used_method.get_descriptor())
+                        to_add['class'] = used_method.get_class_name()
+                        to_add['method'] = used_method.get_name()
+                        to_add['type'] = used_method.get_descriptor()
+                        writer.add_vulnerable_code(to_add)
+                else:
+                    writer.add_vulnerable_code(to_add)
 
         if list_X509Certificate_Warning_class:
-            writer.write("--------------------------------------------------")
             writer.write("[Maybe Vulnerable (Please manually confirm)]")
             for name in list_X509Certificate_Warning_class:
                 writer.write("=> " + name)
+                to_add = {
+                    'cert': name,
+                    'id': name
+                }
                 if name in dict_X509Certificate_class_name_to_caller_mapping:
                     for used_method in dict_X509Certificate_class_name_to_caller_mapping[name]:
-                        writer.write(
-                            "      -> used by: " + used_method.get_class_name() + "->" + used_method.get_name() + used_method.get_descriptor())
+                        writer.write("      -> used by: " + used_method.get_class_name() + "->" + used_method.get_name() + used_method.get_descriptor())
+                        to_add['string'] = '%s->%s%s' % (used_method.get_class_name(),
+                                                         used_method.get_name(),
+                                                         used_method.get_descriptor())
+                        to_add['class'] = used_method.get_class_name()
+                        to_add['method'] = used_method.get_name()
+                        to_add['type'] = used_method.get_descriptor()
+                        writer.add_vulnerable_code(to_add)
+                else:
+                    writer.add_vulnerable_code(to_add)
 
     else:
         writer.startWriter("SSL_X509", LEVEL_INFO, "SSL Certificate Verification Checking",
