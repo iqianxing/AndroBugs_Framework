@@ -28,6 +28,7 @@ from struct import pack, unpack
 from xml.sax.saxutils import escape
 from zlib import crc32
 import re
+import sys
 
 from xml.dom import minidom
 
@@ -128,6 +129,15 @@ def sign_apk(filename, keystore, storepass):
                      "alias_name"],
                     stdout=PIPE, stderr=STDOUT)
     stdout, stderr = compile.communicate()
+
+
+class Error(Exception):
+    """Base class for exceptions in this module."""
+    pass
+
+
+class FileNotPresent(Error):
+    pass
 
 
 ######################################################## APK FORMAT ########################################################
@@ -467,7 +477,7 @@ class APK(object):
         try:
             return self.zip.read(filename)
         except KeyError:
-            return ""
+            raise FileNotPresent(filename)
 
     def get_dex(self):
         """
@@ -475,7 +485,15 @@ class APK(object):
 
             :rtype: string
         """
-        return self.get_file("classes.dex")
+        try:
+            yield self.get_file("classes.dex")
+
+            # Multidex support
+            basename = "classes%d.dex"
+            for i in xrange(2, sys.maxint):
+                yield self.get_file(basename % i)
+        except FileNotPresent:
+            pass
 
     def get_elements(self, tag_name, attribute):
         """
