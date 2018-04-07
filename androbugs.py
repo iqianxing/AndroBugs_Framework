@@ -667,7 +667,7 @@ class Writer:
                   'information': self.__package_information,
                   'result': self.__output_dict_vector_result_information,
                 }
-                f.write(json.dumps(output_json,ensure_ascii=False,cls=DateEncoder).decode('utf8').encode('gb2312'))
+                f.write(json.dumps(output_json,cls=DateEncoder))
 
             print("<<< Analysis report is generated: " + os.path.abspath(output_file_path) + " >>>")
             print("")
