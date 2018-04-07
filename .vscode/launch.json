@@ -12,8 +12,7 @@
       "console": "integratedTerminal",
       "args": [
         "-f",
-        "app-prod-debug.apk",
-        "-s"
+        "app-prod-debug.apk"
       ]
     }
   ]
