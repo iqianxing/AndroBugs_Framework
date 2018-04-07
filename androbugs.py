@@ -13,7 +13,7 @@ import uuid
 import os
 import re
 import time
-from datetime import datetime
+from datetime import datetime,date
 import hashlib  # sha256 hash
 from textwrap import TextWrapper  # for indent in output
 import base64
@@ -139,7 +139,7 @@ ANALYZE_ENGINE_BUILD_DEFAULT = 1  # Analyze Engine(use only number)
 
 DIRECTORY_APK_FILES = ""  # "APKs/"
 
-REPORT_OUTPUT = TYPE_REPORT_OUTPUT_ONLY_PRINT  #when compiling to Windows executable, switch to "TYPE_REPORT_OUTPUT_ONLY_FILE"
+REPORT_OUTPUT = TYPE_REPORT_OUTPUT_PRINT_AND_FILE  #when compiling to Windows executable, switch to "TYPE_REPORT_OUTPUT_ONLY_FILE"
 DIRECTORY_REPORT_OUTPUT = "Reports/"	#Only need to specify when (REPORT_OUTPUT = TYPE_REPORT_OUTPUT_ONLY_FILE) or (REPORT_OUTPUT = TYPE_REPORT_OUTPUT_PRINT_AND_FILE)
 # DIRECTORY_REPORT_OUTPUT = "Massive_Reports/"
 
@@ -657,6 +657,35 @@ class Writer:
             else:
                 self.output("<<< Analysis result has stored into database " + analysis_tips_output + " >>>")
 
+    def save_result_to_json(self, output_file_path, args):
+        if not self.__file_io_result_output_list:
+            self.load_to_output_list(args)
+
+        try:
+            with open(output_file_path, 'w') as f:
+                output_json = {
+                  'information': self.__package_information,
+                  'result': self.__output_dict_vector_result_information,
+                }
+                f.write(json.dumps(output_json,ensure_ascii=False,cls=DateEncoder).decode('utf8').encode('gb2312'))
+
+            print("<<< Analysis report is generated: " + os.path.abspath(output_file_path) + " >>>")
+            print("")
+
+            return True
+        except IOError as err:
+            if DEBUG:
+                print("[Error on writing output file to disk]")
+            return False
+
+class DateEncoder(json.JSONEncoder):  
+    def default(self, obj):  
+        if isinstance(obj, datetime):  
+            return obj.strftime('%Y-%m-%d %H:%M:%S')  
+        elif isinstance(obj, date):  
+            return obj.strftime("%Y-%m-%d")  
+        else:  
+            return json.JSONEncoder.default(self, obj) 
 
 class EfficientStringSearchEngine:
 
@@ -4055,6 +4084,18 @@ def __persist_file(writer, args):
         return False
 
 
+def __persist_json(writer, args):
+
+    package_name =  writer.getInf("package_name")
+    signature_unique_analyze =  writer.getInf("signature_unique_analyze")
+
+    if package_name and signature_unique_analyze:
+        return writer.save_result_to_json(os.path.join(args.report_output_dir, package_name + "_" + signature_unique_analyze + ".json"), args)
+    else:
+        print("\"package_name\" or \"signature_unique_analyze\" not exist.")
+        return False
+
+
 def main(user=None):
 
     args = parseArgument()
@@ -4151,9 +4192,11 @@ def main(user=None):
             writer.show(args)
         elif REPORT_OUTPUT == TYPE_REPORT_OUTPUT_ONLY_FILE:
             __persist_file(writer, args)  # write report to "disk"
+            __persist_json(writer, args)  # write json to "disk"
         elif REPORT_OUTPUT == TYPE_REPORT_OUTPUT_PRINT_AND_FILE:
             writer.show(args)
             __persist_file(writer, args)  # write report to "disk"
+            __persist_json(writer, args)  # write json to "disk"
 
 
 if __name__ == "__main__":
